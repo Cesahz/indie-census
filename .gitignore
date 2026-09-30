@@ -1,0 +1,54 @@
+#datos: ignorados por completo, solo se versionan los marcadores de carpeta
+/data/**/*
+!/data/**/
+!/data/**/.gitkeep
+
+#documentacion interna: nunca se versiona ni se sube a la nube
+/docs/
+
+#secretos y entorno local
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+/secrets/
+
+#datos derivados fuera de data/ (fixtures de pruebas exentas)
+*.parquet
+*.duckdb
+*.sqlite
+*.sqlite3
+*.db
+!/tests/fixtures/**/*.parquet
+
+#python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+#cache y cobertura
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+#notebooks
+.ipynb_checkpoints/
+
+#registros locales
+*.log
+/logs/
+
+#sistema operativo y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
