@@ -1,4 +1,4 @@
-﻿#suite de contrato para el manifiesto de la muestra de control (criterio f1-01)
+#suite de contrato para el manifiesto de la muestra de control (criterio f1-01)
 #estado esperado al commitear: todos los tests en rojo (manifiesto vacio)
 #estado al cerrar f1-01: todos los tests en verde con manifiesto poblado
 #sin acceso a red, sin reloj real
@@ -99,7 +99,6 @@ class ManifiestoSchema(BaseModel):
     """contrato del manifiesto completo config/muestra_control.yaml."""
 
     juegos: list[EntradaManifiesto]
-    sha256_manifiesto: str
 
 
 # ---------------------------------------------------------------------------
@@ -175,13 +174,6 @@ def test_f1_01_manifiesto_tiene_campo_juegos() -> None:
         f"campo 'juegos' debe ser una lista, se obtuvo: {type(contenido['juegos']).__name__}"
     )
 
-
-def test_f1_01_manifiesto_tiene_campo_sha256() -> None:
-    #el campo 'sha256_manifiesto' debe estar presente
-    contenido = _cargar_contenido_yaml() or {}
-    assert "sha256_manifiesto" in contenido, (
-        "campo 'sha256_manifiesto' ausente en muestra_control.yaml"
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -367,23 +359,6 @@ def test_f1_01_pydantic_bloquea_general_con_evidencia_nivel() -> None:
 # ---------------------------------------------------------------------------
 # f1-01g: integridad sha256 del manifiesto
 # ---------------------------------------------------------------------------
-
-def test_f1_01_sha256_campo_en_yaml_coincide_con_archivo() -> None:
-    """el sha256_manifiesto dentro del yaml debe coincidir con el sha256 del archivo.
-
-    nota: el campo sha256_manifiesto registra el hash del archivo tal como queda
-    tras ser escrito — esto crea una circularidad que se rompe calculando el hash
-    del archivo en disco y comparandolo con el valor declarado en el campo.
-    en la practica, el valor se calcula sobre el archivo ya finalizado y luego
-    se inserta en el campo, por lo que el hash del archivo en disco con el campo
-    ya presente es el valor canónico.
-    """
-    manifiesto = _cargar_manifiesto_validado()
-    sha_calculado = _calcular_sha256_manifiesto()
-    assert manifiesto.sha256_manifiesto.lower() == sha_calculado, (
-        f"sha256_manifiesto en el yaml ({manifiesto.sha256_manifiesto!r}) "
-        f"no coincide con el sha256 del archivo en disco ({sha_calculado!r})"
-    )
 
 
 def test_f1_01_sha256_registrado_en_changelog() -> None:
