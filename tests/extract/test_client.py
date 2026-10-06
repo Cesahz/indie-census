@@ -220,3 +220,64 @@ def test_configuracion_parametros_fijos_region_e_idioma() -> None:
     url_llamada = mock_session.get.call_args[0][0]
     assert "cc=AR" in url_llamada
     assert "l=spanish" in url_llamada
+
+
+def test_respuesta_json_invalido_lanza_error_servidor() -> None:
+    #si steam devuelve 200 pero cuerpo corrupto, debe lanzar SteamServerError
+    mock_session = MagicMock(spec=requests.Session)
+    resp_corrupta = DummyResponse(status_code=200, json_data=None)
+    mock_session.get.return_value = resp_corrupta
+
+    cliente = SteamClient(session=mock_session)
+    with pytest.raises(SteamServerError) as exc_info:
+        cliente.get_app_details(1809540)
+
+    assert "json no valida" in str(exc_info.value).lower()
+
+
+def test_codigo_http_inesperado_lanza_error_cliente() -> None:
+    #codigos como 403 o 400 deben lanzar SteamClientError generico
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.return_value = DummyResponse(status_code=403)
+
+    cliente = SteamClient(session=mock_session)
+    with pytest.raises(SteamClientError) as exc_info:
+        cliente.get_app_details(1809540)
+
+    assert "403" in str(exc_info.value)
+
+
+def test_appid_ausente_en_diccionario_lanza_error_no_encontrado() -> None:
+    #si la respuesta json 200 no contiene la clave del appid, lanza SteamAppNotFoundError
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.return_value = DummyResponse(status_code=200, json_data={})
+
+    cliente = SteamClient(session=mock_session)
+    with pytest.raises(SteamAppNotFoundError) as exc_info:
+        cliente.get_app_details(1809540)
+
+    assert "1809540" in str(exc_info.value)
+
+
+def test_retry_after_no_numerico_usa_backoff_exponencial() -> None:
+    #si la cabecera Retry-After contiene texto invalido, se calcula backoff exponencial
+    fixture = _cargar_fixture("appdetails_success_1809540.json")
+    resp_429 = DummyResponse(status_code=429, headers={"Retry-After": "invalido"})
+    resp_200 = DummyResponse(status_code=200, json_data=fixture)
+
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.side_effect = [resp_429, resp_200]
+
+    pausas: list[float] = []
+    cliente = SteamClient(
+        session=mock_session,
+        backoff_factor=2.0,
+        sleep_fn=lambda s: pausas.append(s),
+    )
+
+    resultado = cliente.get_app_details(1809540)
+
+    assert resultado == fixture
+    #2.0 * (2 ** 0) = 2.0
+    assert pausas == [2.0]
+
