@@ -21,14 +21,14 @@ FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "steam"
 
 
 def _cargar_fixture(nombre_archivo: str) -> dict[str, Any]:
-    """cargar fixture grabada desde el directorio de pruebas."""
+    """Cargar fixture grabada desde el directorio de pruebas."""
     ruta = FIXTURES_DIR / nombre_archivo
     with ruta.open(encoding="utf-8") as f:
         return json.load(f)
 
 
 class DummyResponse:
-    """doble de prueba para simular requests.Response de forma hermetica."""
+    """Doble de prueba para simular requests.Response de forma hermetica."""
 
     def __init__(
         self,

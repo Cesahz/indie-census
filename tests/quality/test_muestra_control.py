@@ -29,7 +29,7 @@ POR_GRUPO = 50
 # ---------------------------------------------------------------------------
 
 class EntradaManifiesto(BaseModel):
-    """contrato de una entrada individual del manifiesto de la muestra."""
+    """Contrato de una entrada individual del manifiesto de la muestra."""
 
     appid: int
     grupo: str
@@ -73,7 +73,7 @@ class EntradaManifiesto(BaseModel):
 
     @model_validator(mode="after")
     def reglas_por_grupo(self) -> "EntradaManifiesto":
-        """aplicar reglas cruzadas segun el grupo de la entrada."""
+        """Aplicar reglas cruzadas segun el grupo de la entrada."""
         if self.grupo == "godot":
             #grupo godot: evidencia de nivel 1 o 2 obligatoria
             if self.evidencia_nivel not in NIVELES_EVIDENCIA_GODOT:
@@ -96,7 +96,7 @@ class EntradaManifiesto(BaseModel):
 
 
 class ManifiestoSchema(BaseModel):
-    """contrato del manifiesto completo config/muestra_control.yaml."""
+    """Contrato del manifiesto completo config/muestra_control.yaml."""
 
     juegos: list[EntradaManifiesto]
 
@@ -106,20 +106,20 @@ class ManifiestoSchema(BaseModel):
 # ---------------------------------------------------------------------------
 
 def _cargar_contenido_yaml() -> Any:
-    """cargar muestra_control.yaml y devolver contenido crudo."""
+    """Cargar muestra_control.yaml y devolver contenido crudo."""
     assert RUTA_MANIFIESTO.is_file(), "config/muestra_control.yaml no existe"
     with RUTA_MANIFIESTO.open(encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
 def _calcular_sha256_manifiesto() -> str:
-    """calcular sha256 del contenido binario de muestra_control.yaml."""
+    """Calcular sha256 del contenido binario de muestra_control.yaml."""
     contenido = RUTA_MANIFIESTO.read_bytes()
     return hashlib.sha256(contenido).hexdigest()
 
 
 def _cargar_manifiesto_validado() -> ManifiestoSchema:
-    """cargar y validar el manifiesto completo con pydantic."""
+    """Cargar y validar el manifiesto completo con pydantic."""
     contenido = _cargar_contenido_yaml()
     assert contenido is not None, (
         "muestra_control.yaml esta vacio — poblar el manifiesto antes de ejecutar estos tests"
@@ -131,7 +131,7 @@ def _cargar_manifiesto_validado() -> ManifiestoSchema:
 
 
 def _extraer_sha256_desde_changelog() -> Optional[str]:
-    """buscar la huella sha256 del manifiesto registrada en changelog.md."""
+    """Buscar la huella sha256 del manifiesto registrada en changelog.md."""
     if not RUTA_CHANGELOG.is_file():
         return None
     texto = RUTA_CHANGELOG.read_text(encoding="utf-8")
