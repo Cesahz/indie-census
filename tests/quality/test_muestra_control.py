@@ -8,8 +8,10 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Optional
 
+# pyrefly: ignore [missing-import]
 import pytest
 import yaml
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, field_validator, model_validator, ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
