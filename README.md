@@ -47,3 +47,21 @@ The goal of the MVP (`v0.1.0`) is to build solid data engineering foundations an
 - **Hermetic Testing:** Unit and integration tests never touch live networks; dependencies like clocks, sleep intervals, and random seeds are injected.
 - **Immutability and Traceability:** Raw data is never overwritten; recomputations always branch from historical source truth.
 - **Zero-Cost Design:** Fully automated and reproducible on lightweight infrastructure without recurring cloud server costs.
+
+---
+
+## Pipeline Execution
+
+The entire pipeline—from the calibrated control sample manifest to validated Silver Parquet tables—can be executed with a single command:
+
+```bash
+# Run full pipeline: extraction -> bronze -> silver -> quality contracts
+python -m src.pipeline
+```
+
+Available CLI options:
+- `--fecha YYYY-MM-DD`: Execution partition date (defaults to current UTC date).
+- `--ruta-base DIR`: Base data directory (defaults to `data/`).
+- `--manifiesto YAML`: Path to control sample manifest (defaults to `config/muestra_control.yaml`).
+- `--omitir-extraccion`: Skip network extraction and run transformation and quality contracts over existing Bronze partitions.
+

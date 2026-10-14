@@ -47,3 +47,21 @@ El objetivo del MVP (`v0.1.0`) es establecer las bases de ingeniería de datos y
 - **Hermeticidad total:** Pruebas unitarias y de integración que no tocan la red real; inyección de dependencias para reloj, pausas y generadores aleatorios.
 - **Inmutabilidad y trazabilidad:** Los datos crudos jamás se sobreescriben; cualquier recomputación parte de la fuente original histórica.
 - **Diseño sin costo:** Ejecución automatizada aprovechando infraestructura ligera y reproducible sin servidores dedicados de pago.
+
+---
+
+## Ejecución del Pipeline
+
+El pipeline completo —desde el manifiesto de la muestra de control hasta las tablas Parquet validadas en Plata— se ejecuta con un solo comando:
+
+```bash
+# Ejecutar pipeline completo: extracción -> bronce -> plata -> contratos de calidad
+python -m src.pipeline
+```
+
+Parámetros disponibles en CLI:
+- `--fecha AAAA-MM-DD`: Partición temporal de ejecución (por defecto: fecha UTC actual).
+- `--ruta-base DIR`: Directorio base de datos (por defecto: `data/`).
+- `--manifiesto YAML`: Ruta al manifiesto de muestra (por defecto: `config/muestra_control.yaml`).
+- `--omitir-extraccion`: Omitir la extracción por red y ejecutar transformación y contratos de calidad sobre particiones existentes en Bronce.
+
