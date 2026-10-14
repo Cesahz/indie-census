@@ -124,8 +124,8 @@ def _cargar_contenido_yaml() -> Any:
 
 
 def _calcular_sha256_manifiesto() -> str:
-    """Calcular sha256 del contenido binario de muestra_control.yaml."""
-    contenido = RUTA_MANIFIESTO.read_bytes()
+    """Calcular sha256 de muestra_control.yaml normalizando saltos de linea a lf."""
+    contenido = RUTA_MANIFIESTO.read_bytes().replace(b"\r\n", b"\n")
     return hashlib.sha256(contenido).hexdigest()
 
 

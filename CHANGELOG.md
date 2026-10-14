@@ -15,4 +15,4 @@
 - transformacion determinista a capa plata con esquemas arrow y tablas parquet (dim_game, game_review_summary)
 - suite de contratos bloqueantes de calidad de datos y contencion atomica
 - orquestador integral e2e ejecutable con un solo comando (python -m src.pipeline)
-  sha256-muestra-control: 8892528f3c2f9c7c60a3459eed3ab80c7f45b093ccd04ce42acb9c74fc6f6c7f
+  sha256-muestra-control: b1fe0c86c1adda42594b5a1ebbf9c889ed06329dec11487eb291ede0a615c8bd
