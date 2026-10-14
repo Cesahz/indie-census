@@ -24,6 +24,7 @@ El proyecto no busca validar una postura particular ni se restringe a una herram
 2. **Dinámica de precios y sostenibilidad comercial:** Rangos de precios, estrategias de lanzamiento y supervivencia económica de producciones de pequeña escala.
 3. **Divulgación de Inteligencia Artificial generativa:** Detección y análisis cuantitativo de las declaraciones de uso de IA en assets y código según las políticas públicas de las plataformas de distribución.
 4. **Metodología y datos abiertos:** Publicación no solo de conclusiones o gráficos, sino de los datasets limpios y el código del pipeline para que cualquier persona en la comunidad pueda reproducir o auditar los resultados.
+5. **Auditoría de Viabilidad Comercial y Data Science Aplicada:** Evolución desde la observación descriptiva hacia un motor diagnóstico prescriptivo y predictivo. Aportar a desarrolladores, publishers y consultores modelos de regresión y scoring de ventas/pricing, cálculo de densidad competitiva en ventanas de lanzamiento, detección de tags saturados frente a nichos desatendidos, y generación headless automatizada de reportes ejecutivos de auditoría (PDF/JSON).
 
 ---
 

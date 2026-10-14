@@ -24,6 +24,7 @@ The project does not aim to validate any single bias or focus exclusively on a s
 2. **Pricing Dynamics and Commercial Sustainability:** Price points, launch patterns, and economic survival among small-scale productions.
 3. **Generative AI Disclosures:** Quantitative tracking and analysis of declared generative AI usage in assets and code, based on public platform disclosure policies.
 4. **Open Data and Methodology:** Publishing not just graphs or conclusions, but clean datasets and pipeline source code so anyone in the community can reproduce or audit every finding.
+5. **Commercial Viability Audit & Applied Data Science:** Transitioning from descriptive observation to a prescriptive and predictive diagnostic engine. Providing indie developers, publishers, and consultants with empirical sales/pricing regression scoring, launch window competition density analysis, saturated vs. underserved tag gap detection, and automated headless audit report generation (PDF/JSON).
 
 ---
 
