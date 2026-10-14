@@ -16,7 +16,16 @@ from pydantic import BaseModel, field_validator, model_validator, ValidationErro
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUTA_MANIFIESTO = REPO_ROOT / "config" / "muestra_control.yaml"
-RUTA_CHANGELOG = REPO_ROOT / "changelog.md"
+def _resolver_ruta_changelog() -> Path:
+    """Resolver ruta a CHANGELOG.md de forma tolerante a mayusculas y minusculas."""
+    for nombre in ("CHANGELOG.md", "changelog.md"):
+        candidato = REPO_ROOT / nombre
+        if candidato.is_file():
+            return candidato
+    return REPO_ROOT / "CHANGELOG.md"
+
+
+RUTA_CHANGELOG = _resolver_ruta_changelog()
 
 GRUPOS_VALIDOS = {"godot", "general"}
 NIVELES_EVIDENCIA_GODOT = {1, 2}

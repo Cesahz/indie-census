@@ -39,8 +39,8 @@ DIRECTORIOS_CANONICOS = [
 ]
 
 ARCHIVOS_CANONICOS = [
-    "changelog.md",
-    "readme.md",
+    "CHANGELOG.md",
+    "README.md",
     "requirements.txt",
     ".gitignore",
     "config/taxonomy.yaml",
@@ -350,15 +350,19 @@ PATRON_SECCION = re.compile(r"^### (.+)$")
 
 
 def _leer_changelog() -> list[str]:
-    """leer changelog.md y devolver lista de lineas sin salto final."""
-    ruta = REPO_ROOT / "changelog.md"
-    assert ruta.is_file(), "changelog.md no existe"
-    return ruta.read_text(encoding="utf-8").splitlines()
+    """Leer CHANGELOG.md y devolver lista de lineas sin salto final."""
+    for nombre in ("CHANGELOG.md", "changelog.md"):
+        ruta = REPO_ROOT / nombre
+        if ruta.is_file():
+            return ruta.read_text(encoding="utf-8").splitlines()
+    raise FileNotFoundError("CHANGELOG.md no existe")
 
 
 def test_f0_07_changelog_existe() -> None:
     #changelog.md debe existir en la raiz del repositorio
-    assert (REPO_ROOT / "changelog.md").is_file(), "changelog.md no existe"
+    assert (REPO_ROOT / "CHANGELOG.md").is_file() or (REPO_ROOT / "changelog.md").is_file(), (
+        "CHANGELOG.md no existe"
+    )
 
 
 def test_f0_07_changelog_tiene_seccion_sin_publicar() -> None:
