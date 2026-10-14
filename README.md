@@ -66,3 +66,9 @@ Available CLI options:
 - `--manifiesto YAML`: Path to control sample manifest (defaults to `config/muestra_control.yaml`).
 - `--omitir-extraccion`: Skip network extraction and run transformation and quality contracts over existing Bronze partitions.
 
+---
+
+## License
+
+This project is licensed under the terms of the [MIT License](LICENSE).
+

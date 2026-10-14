@@ -66,3 +66,9 @@ Parámetros disponibles en CLI:
 - `--manifiesto YAML`: Ruta al manifiesto de muestra (por defecto: `config/muestra_control.yaml`).
 - `--omitir-extraccion`: Omitir la extracción por red y ejecutar transformación y contratos de calidad sobre particiones existentes en Bronce.
 
+---
+
+## Licencia
+
+Este proyecto se distribuye bajo los términos de la [Licencia MIT](LICENSE).
+

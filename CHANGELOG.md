@@ -3,6 +3,7 @@
 ### agregado
 
 - planeacion del slice de itch.io mediante feeds publicos (fase 2)
+- declaracion formal de licencia mit en la raiz del repositorio (license)
 
 ## [0.1.0] - 2026-10-14
 

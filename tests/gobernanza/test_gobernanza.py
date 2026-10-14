@@ -41,6 +41,7 @@ DIRECTORIOS_CANONICOS = [
 ARCHIVOS_CANONICOS = [
     "CHANGELOG.md",
     "README.md",
+    "LICENSE",
     "requirements.txt",
     ".gitignore",
     "config/taxonomy.yaml",
