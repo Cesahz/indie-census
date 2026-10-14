@@ -1,0 +1,901 @@
+juegos:
+  - appid: 3415570
+    grupo: "godot"
+    titulo: "Die For The Lich"
+    release_date: "2025-11-10"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3724020
+    grupo: "godot"
+    titulo: "GeoLight"
+    release_date: "2025-05-29"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3731850
+    grupo: "godot"
+    titulo: "Save Your Soul"
+    release_date: "2025-06-02"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3643480
+    grupo: "godot"
+    titulo: "Byte of the Dead"
+    release_date: "2025-05-23"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3351470
+    grupo: "godot"
+    titulo: "I'd KILL YOU as a Worm"
+    release_date: "2025-05-09"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3600940
+    grupo: "godot"
+    titulo: "Hard Jump"
+    release_date: "2025-04-29"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3462150
+    grupo: "godot"
+    titulo: "Turret Baffler"
+    release_date: "2025-05-26"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3628960
+    grupo: "godot"
+    titulo: "Miscrits: World of Creatures"
+    release_date: "2025-05-25"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3765700
+    grupo: "godot"
+    titulo: "Clown Camp"
+    release_date: "2026-06-12"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3655580
+    grupo: "godot"
+    titulo: "Four Divine Abidings"
+    release_date: "2025-07-09"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3209760
+    grupo: "godot"
+    titulo: "Trigger of Time"
+    release_date: "2025-06-06"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3352310
+    grupo: "godot"
+    titulo: "Spooky Express"
+    release_date: "2025-10-21"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3556690
+    grupo: "godot"
+    titulo: "Orbital Siege"
+    release_date: "2025-08-24"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3208560
+    grupo: "godot"
+    titulo: "Trainatic"
+    release_date: "2025-09-08"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3326600
+    grupo: "godot"
+    titulo: "Hallway Shot"
+    release_date: "2025-11-23"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3699100
+    grupo: "godot"
+    titulo: "SAFE ZONE"
+    release_date: "2025-05-16"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3166810
+    grupo: "godot"
+    titulo: "Insider Trading"
+    release_date: "2026-02-18"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3670290
+    grupo: "godot"
+    titulo: "Dragons Frolic!"
+    release_date: "2025-10-20"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3683910
+    grupo: "godot"
+    titulo: "Pinball Crush"
+    release_date: "2025-07-17"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3004390
+    grupo: "godot"
+    titulo: "The Cave Diver"
+    release_date: "2026-08-12"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3635290
+    grupo: "godot"
+    titulo: "Jovian Drive"
+    release_date: "2025-05-14"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3554030
+    grupo: "godot"
+    titulo: "Behind the Hydra's Eyes"
+    release_date: "2025-11-28"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3269180
+    grupo: "godot"
+    titulo: "Piñata Go Boom"
+    release_date: "2025-09-15"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3714740
+    grupo: "godot"
+    titulo: "Pity This Busy Monster"
+    release_date: "2025-05-28"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3676060
+    grupo: "godot"
+    titulo: "half-a-cado"
+    release_date: "2025-05-21"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 2850000
+    grupo: "godot"
+    titulo: "Reborn: An Idle Roguelike RPG"
+    release_date: "2025-05-09"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3545290
+    grupo: "godot"
+    titulo: "Bearzerk"
+    release_date: "2025-09-21"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3444870
+    grupo: "godot"
+    titulo: "Rogue Bricks"
+    release_date: "2025-03-10"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3565330
+    grupo: "godot"
+    titulo: "Squinky"
+    release_date: "2025-12-20"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 910860
+    grupo: "godot"
+    titulo: "Wide Load"
+    release_date: "2025-06-12"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3686580
+    grupo: "godot"
+    titulo: "Repel The Rifts"
+    release_date: "2025-11-24"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3719900
+    grupo: "godot"
+    titulo: "Pereelous"
+    release_date: "2025-10-17"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3120040
+    grupo: "godot"
+    titulo: "The End of Gameplay"
+    release_date: "2025-05-12"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3234730
+    grupo: "godot"
+    titulo: "Blue Rabbit, Black Future"
+    release_date: "2024-10-17"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 2144990
+    grupo: "godot"
+    titulo: "Bryce Tiles"
+    release_date: "2025-04-24"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3700080
+    grupo: "godot"
+    titulo: "Mythscroll"
+    release_date: "2025-08-11"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3684610
+    grupo: "godot"
+    titulo: "s.p.l.i.t"
+    release_date: "2025-07-24"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3644970
+    grupo: "godot"
+    titulo: "Fading Serenades"
+    release_date: "2025-10-23"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3709390
+    grupo: "godot"
+    titulo: "Gold and Bricks"
+    release_date: "2025-06-16"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 2816530
+    grupo: "godot"
+    titulo: "Slimes are the Strongest"
+    release_date: "2024-04-05"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3000030
+    grupo: "godot"
+    titulo: "Gaiadon: Eternal Quest"
+    release_date: "2024-07-01"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3068670
+    grupo: "godot"
+    titulo: "Anode Heart: Layer Null"
+    release_date: "2025-11-19"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3019160
+    grupo: "godot"
+    titulo: "Creeping Dusk"
+    release_date: "2024-08-15"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 2778200
+    grupo: "godot"
+    titulo: "Lovecraft Locker: Tentacle Hell"
+    release_date: "2024-05-02"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 2505560
+    grupo: "godot"
+    titulo: "Horny Recruiter"
+    release_date: "2024-02-22"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3211840
+    grupo: "godot"
+    titulo: "Slave Harem"
+    release_date: "2024-10-24"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3265280
+    grupo: "godot"
+    titulo: "Pic-Me!"
+    release_date: "2024-12-16"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3244210
+    grupo: "godot"
+    titulo: "Chonkers"
+    release_date: "2024-12-11"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 3332860
+    grupo: "godot"
+    titulo: "Sexual Sealing Dungeon: Eronest"
+    release_date: "2024-12-13"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  - appid: 2686320
+    grupo: "godot"
+    titulo: "Sexy Iron Maidens"
+    release_date: "2024-11-08"
+    evidencia_nivel: 1
+    fuente_evidencia: "https://store.steampowered.com/curator/41324400-Is-it-made-with-Godot/"
+    criterio_inclusion: "curador is-it-made-with-godot con confirmacion de motor"
+    semilla_sorteo: null
+
+  # lote 50 juegos grupo general para muestra_control.yaml
+  - appid: 2900640
+    grupo: "general"
+    titulo: "TOEM 2"
+    release_date: "2026-09-29"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4623570
+    grupo: "general"
+    titulo: "Deskrawl: Idle ARPG"
+    release_date: "2026-09-28"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2379780
+    grupo: "general"
+    titulo: "Balatro"
+    release_date: "2024-02-20"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 1145350
+    grupo: "general"
+    titulo: "Hades II"
+    release_date: "2025-09-25"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4259190
+    grupo: "general"
+    titulo: "Kingdom Rush 6: Genesis TD"
+    release_date: "2026-09-24"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3917700
+    grupo: "general"
+    titulo: "Dicevaders"
+    release_date: "2026-09-29"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3948120
+    grupo: "general"
+    titulo: "Scritchy Scratchy"
+    release_date: "2026-03-18"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2950790
+    grupo: "general"
+    titulo: "IRON NEST: Heavy Turret Simulator"
+    release_date: "2026-08-06"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2670630
+    grupo: "general"
+    titulo: "Supermarket Simulator"
+    release_date: "2025-06-19"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2849080
+    grupo: "general"
+    titulo: "Kingdom Rush 5: Alliance TD"
+    release_date: "2024-07-25"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4090260
+    grupo: "general"
+    titulo: "Lifeguard Holic"
+    release_date: "2026-09-16"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 1996010
+    grupo: "general"
+    titulo: "Crow Country"
+    release_date: "2024-05-09"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2239150
+    grupo: "general"
+    titulo: "Thronefall"
+    release_date: "2024-10-11"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3725800
+    grupo: "general"
+    titulo: "Island of Rebirth~NTR and Love~"
+    release_date: "2026-09-29"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4601120
+    grupo: "general"
+    titulo: "Endless Rails"
+    release_date: "2026-09-29"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 5064340
+    grupo: "general"
+    titulo: "DinoBones: Tidy Up the Museum"
+    release_date: "2026-09-25"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3464000
+    grupo: "general"
+    titulo: "Eropsychosis: The Project Elysiara"
+    release_date: "2026-09-29"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2062430
+    grupo: "general"
+    titulo: "BALL x PIT"
+    release_date: "2025-10-15"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 838350
+    grupo: "general"
+    titulo: "The Scroll of Taiwu : Beyond The Dome"
+    release_date: "2026-06-16"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4072240
+    grupo: "general"
+    titulo: "Woman Simulator"
+    release_date: "2026-09-25"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3405340
+    grupo: "general"
+    titulo: "Megabonk"
+    release_date: "2025-09-18"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2863680
+    grupo: "general"
+    titulo: "ZERO PARADES: For Dead Spies"
+    release_date: "2026-05-21"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4981570
+    grupo: "general"
+    titulo: "Wand & Order: Tidy up the magic shop!"
+    release_date: "2026-09-23"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4110220
+    grupo: "general"
+    titulo: "Room 404: Erotic Massage"
+    release_date: "2026-09-16"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4094660
+    grupo: "general"
+    titulo: "Rivage"
+    release_date: "2026-09-22"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3711590
+    grupo: "general"
+    titulo: "Train45"
+    release_date: "2026-06-25"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2445690
+    grupo: "general"
+    titulo: "Lost Castle 2"
+    release_date: "2026-06-10"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3855540
+    grupo: "general"
+    titulo: "BLACK SOULS II"
+    release_date: "2025-11-28"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2796640
+    grupo: "general"
+    titulo: "The Magus Circle"
+    release_date: "2026-09-24"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 1809540
+    grupo: "general"
+    titulo: "Nine Sols"
+    release_date: "2024-05-29"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2085540
+    grupo: "general"
+    titulo: "Stick It to the Stickman"
+    release_date: "2026-09-23"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4671380
+    grupo: "general"
+    titulo: "Scapewatch: Idle MMO"
+    release_date: "2026-09-25"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3936270
+    grupo: "general"
+    titulo: "It's Fine"
+    release_date: "2026-09-23"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4198330
+    grupo: "general"
+    titulo: "Femboy Ghost"
+    release_date: "2026-09-28"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3510740
+    grupo: "general"
+    titulo: "Normal Golf Game"
+    release_date: "2026-09-21"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4150170
+    grupo: "general"
+    titulo: "DARK HUNTER KURO"
+    release_date: "2026-09-25"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 1211020
+    grupo: "general"
+    titulo: "Wobbly Life"
+    release_date: "2025-09-18"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4731620
+    grupo: "general"
+    titulo: "Fortune Mill"
+    release_date: "2026-06-02"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 4148240
+    grupo: "general"
+    titulo: "Road to Empress Ⅱ"
+    release_date: "2026-06-08"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3560670
+    grupo: "general"
+    titulo: "OpenFront"
+    release_date: "2026-09-17"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3208930
+    grupo: "general"
+    titulo: "Galvatein : Adventurers' Guild"
+    release_date: "2026-09-22"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2404880
+    grupo: "general"
+    titulo: "Car Dealer Simulator"
+    release_date: "2025-05-29"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 813230
+    grupo: "general"
+    titulo: "ANIMAL WELL"
+    release_date: "2024-05-09"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 1894430
+    grupo: "general"
+    titulo: "Plan B: Terraform"
+    release_date: "2025-08-29"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3861710
+    grupo: "general"
+    titulo: "Otterly Lost"
+    release_date: "2026-09-23"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3804370
+    grupo: "general"
+    titulo: "The Piper of Dawn"
+    release_date: "2026-09-22"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2725260
+    grupo: "general"
+    titulo: "ENDER MAGNOLIA: Bloom in the Mist"
+    release_date: "2025-01-22"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 3565480
+    grupo: "general"
+    titulo: "Roadhouse Simulator"
+    release_date: "2026-09-21"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2710480
+    grupo: "general"
+    titulo: "The Wife Next Door"
+    release_date: "2024-11-27"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null
+
+  - appid: 2434600
+    grupo: "general"
+    titulo: "ShantyTown"
+    release_date: "2026-04-16"
+    evidencia_nivel: null
+    fuente_evidencia: null
+    criterio_inclusion: "muestreo indie steam sin motor godot"
+    semilla_sorteo: null

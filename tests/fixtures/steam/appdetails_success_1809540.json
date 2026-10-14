@@ -1,0 +1,29 @@
+{
+  "1809540": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Nine Sols",
+      "steam_appid": 1809540,
+      "is_free": false,
+      "release_date": {
+        "coming_soon": false,
+        "date": "29 May, 2024"
+      },
+      "price_overview": {
+        "currency": "USD",
+        "initial": 2999,
+        "final": 2999,
+        "discount_percent": 0,
+        "initial_formatted": "$29.99",
+        "final_formatted": "$29.99"
+      },
+      "developers": [
+        "Red Candle Games"
+      ],
+      "publishers": [
+        "Red Candle Games"
+      ]
+    }
+  }
+}
