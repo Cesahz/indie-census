@@ -4,8 +4,11 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
+# pyrefly: ignore [missing-import]
 import pyarrow as pa
+# pyrefly: ignore [missing-import]
 import pyarrow.parquet as pq
+# pyrefly: ignore [missing-import]
 import pytest
 import yaml
 

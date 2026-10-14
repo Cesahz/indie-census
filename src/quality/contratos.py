@@ -3,6 +3,7 @@
 from datetime import date
 from typing import Any, Callable
 
+# pyrefly: ignore [missing-import]
 import pyarrow as pa
 
 #parametros canonicos de la muestra de control

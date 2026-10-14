@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
+# pyrefly: ignore [missing-import]
 import pyarrow as pa
 
 from src.extract.pipeline import ejecutar_extraccion_muestra
