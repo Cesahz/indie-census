@@ -11,6 +11,7 @@ import pyarrow as pa
 
 from src.extract.pipeline import ejecutar_extraccion_muestra
 from src.quality.contratos import CARDINALIDAD_MUESTRA, ContratoCalidadError, validar_contratos_plata
+from src.transform.oro import ejecutar_transformacion_oro
 from src.transform.plata import ejecutar_transformacion_plata
 from src.version import PIPELINE_VERSION
 
@@ -28,6 +29,7 @@ def ejecutar_pipeline(
     fecha: Optional[str] = None,
     cardinalidad_esperada: int = CARDINALIDAD_MUESTRA,
     omitir_extraccion: bool = False,
+    generar_oro: bool = False,
 ) -> dict[str, Any]:
     """Ejecutar el pipeline completo de forma reproducible.
     Entradas:
@@ -39,6 +41,7 @@ def ejecutar_pipeline(
       particion mas reciente disponible por juego.
     - cardinalidad_esperada: numero exacto de juegos exigido por el contrato de cardinalidad.
     - omitir_extraccion: reprocesar unicamente el bronce existente sin contactar a Steam.
+    - generar_oro: generar star schema y data mart analitico en capa oro.
     Salida:
     - diccionario con estado, metricas de extraccion y resultado de plata.
     Excepciones:
@@ -70,11 +73,21 @@ def ejecutar_pipeline(
         validador=validador,
     )
 
+    #4. opcional: generacion de data mart analitico en capa oro (parquet y sqlite)
+    resultado_oro: Optional[dict[str, int]] = None
+    if generar_oro:
+        resultado_oro = ejecutar_transformacion_oro(
+            ruta_plata=base / "plata",
+            ruta_oro=base / "oro",
+            generar_sqlite=True,
+        )
+
     return {
         "estado": "ok",
         "pipeline_version": PIPELINE_VERSION,
         "extraccion": metricas_extraccion,
         "plata": resultado_plata,
+        "oro": resultado_oro,
     }
 
 
@@ -90,12 +103,16 @@ def _construir_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--omitir-extraccion", action="store_true", help="Reprocesar el bronce existente sin contactar a Steam.",
     )
+    parser.add_argument(
+        "--generar-oro", action="store_true", help="Generar star schema y data mart analitico en capa oro.",
+    )
     return parser
 
 
 def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
     """Punto de entrada cli: retorna 0 si el pipeline termina y 1 si un contrato lo bloquea."""
     args = _construir_parser().parse_args(argv)
+    base = args.ruta_base or RUTA_DATA_DEFAULT
     try:
         resultado = ejecutar_pipeline(
             ruta_manifiesto=args.manifiesto,
@@ -103,6 +120,7 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
             client=client,
             fecha=args.fecha,
             omitir_extraccion=args.omitir_extraccion,
+            generar_oro=args.generar_oro,
         )
     except ContratoCalidadError as exc:
         print(f"Pipeline bloqueado por contrato de calidad: {exc}", file=sys.stderr)
@@ -110,6 +128,7 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
 
     extraccion = resultado["extraccion"]
     plata = resultado["plata"]
+    oro = resultado.get("oro")
     print(f"Pipeline completado (version {resultado['pipeline_version']})")
     if extraccion is None:
         print("Extraccion: omitida")
@@ -123,6 +142,9 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
         f"Plata game_review_summary: {plata['filas_game_review_summary']} filas -> "
         f"{plata['game_review_summary']}"
     )
+    if oro is not None:
+        print(f"Oro fact_game_performance: {oro['fact_game_performance']} filas -> {base / 'oro' / 'mart'}")
+        print(f"Oro sqlite mart: {base / 'oro' / 'indie_census_mart.db'}")
     return 0
 
 
