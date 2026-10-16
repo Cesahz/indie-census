@@ -52,3 +52,25 @@ coverage.xml
 Thumbs.db
 .idea/
 .vscode/
+
+#agentes y configuraciones internas locales
+.agents/
+.claude/
+.gemini/
+
+#modelos de bi y visualizacion local
+*.pbix
+*.pbit
+*.pbid
+
+#experimentos, scratch y procesos externos fuera del pipeline canonico
+/experiments/
+/scratch/
+/exports/
+/reports/
+/artifacts/
+
+#formatos tabulares y derivados adicionales
+*.arrow
+*.feather
+*.xlsx
