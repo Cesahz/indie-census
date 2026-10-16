@@ -232,6 +232,21 @@ def test_main_omitir_extraccion_por_cli(
     assert codigo == 0
 
 
+def test_main_generar_oro_cli(
+    tmp_path: Path, juegos_reales: list[dict[str, Any]], capsys: pytest.CaptureFixture[str],
+) -> None:
+    #verificar que --generar-oro produce las tablas de la capa oro y la base sqlite
+    codigo = main(
+        ["--ruta-base", str(tmp_path), "--fecha", FECHA, "--generar-oro"],
+        client=ClienteSteamFalso(juegos_reales),
+    )
+    salida = capsys.readouterr().out
+    assert codigo == 0
+    assert "Oro fact_game_performance" in salida
+    assert (tmp_path / "oro" / "mart" / "fact_game_performance.parquet").is_file()
+    assert (tmp_path / "oro" / "indie_census_mart.db").is_file()
+
+
 def test_modulo_ejecutable_con_python_m() -> None:
     #el subproceso solo consulta la ayuda y no construye cliente http
     proceso = subprocess.run(
@@ -240,3 +255,4 @@ def test_modulo_ejecutable_con_python_m() -> None:
     )
     assert proceso.returncode == 0
     assert "--omitir-extraccion" in proceso.stdout
+    assert "--generar-oro" in proceso.stdout
