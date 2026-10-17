@@ -423,3 +423,18 @@ def test_contencion_contrato_fallido_preserva_plata_valida_previa(tmp_path: Path
     assert archivos == ["dim_game.parquet", "game_review_summary.parquet"]
     for nombre, contenido in contenido_previo.items():
         assert rutas[nombre].read_bytes() == contenido
+
+
+def test_validar_contratos_plata_modo_masivo_admite_fechas_historicas() -> None:
+    #en modo masivo la ventana temporal admite el catalogo historico desde 1997
+    def fecha_historica(filas: list[dict[str, Any]]) -> None:
+        filas[0]["release_date"] = "1999-04-01"
+        filas[1]["release_date"] = "2000-11-01"
+
+    dim, res = _tablas(mut_dim=fecha_historica)
+    #en modo control debe fallar por violacion de ventana temporal
+    with pytest.raises(ContratoCalidadError, match="ventana_temporal"):
+        validar_contratos_plata(dim, res, cardinalidad_esperada=dim.num_rows, modo="control")
+
+    #en modo masivo debe ser valido y no levantar excepcion
+    validar_contratos_plata(dim, res, cardinalidad_esperada=dim.num_rows, modo="masivo")
