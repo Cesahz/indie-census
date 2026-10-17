@@ -48,6 +48,7 @@ El objetivo del MVP (`v0.1.0`) es establecer las bases de ingeniería de datos y
 - **Hermeticidad total:** Pruebas unitarias y de integración que no tocan la red real; inyección de dependencias para reloj, pausas y generadores aleatorios.
 - **Inmutabilidad y trazabilidad:** Los datos crudos jamás se sobreescriben; cualquier recomputación parte de la fuente original histórica.
 - **Diseño sin costo:** Ejecución automatizada aprovechando infraestructura ligera y reproducible sin servidores dedicados de pago.
+- **Eficiencia de ingesta:** Optimización de cuotas y rendimiento mediante endpoints autenticados por lotes (reducción del 99.4% en tiempo de catalogación y aceleración de 188x frente a endpoints anónimos; consúltese la [evaluación técnica de rendimiento](benchmarks/steam_api_throughput.md)).
 
 ---
 

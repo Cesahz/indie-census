@@ -48,6 +48,7 @@ The goal of the MVP (`v0.1.0`) is to build solid data engineering foundations an
 - **Hermetic Testing:** Unit and integration tests never touch live networks; dependencies like clocks, sleep intervals, and random seeds are injected.
 - **Immutability and Traceability:** Raw data is never overwritten; recomputations always branch from historical source truth.
 - **Zero-Cost Design:** Fully automated and reproducible on lightweight infrastructure without recurring cloud server costs.
+- **Ingestion Efficiency:** Quota and throughput optimization via batch authenticated endpoints (99.4% reduction in cataloging time and 188x acceleration over anonymous endpoints; see the [technical benchmark report](benchmarks/steam_api_throughput.md)).
 
 ---
 
