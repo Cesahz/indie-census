@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Optional
 import yaml
 
-from src.extract.bronce import crear_envoltorio_bronce, guardar_en_bronce
+from src.extract.bronce import BronzeImmutabilityError, crear_envoltorio_bronce, guardar_en_bronce
 from src.extract.checkpoint import GestorCheckpoint
 from src.extract.client import SteamClient
 
@@ -169,13 +169,16 @@ def _guardar_lote_catalogo(
         estado_http=200,
         payload=payload,
     )
-    guardar_en_bronce(
-        recurso="applist",
-        fecha=fecha,
-        appid=lote_idx,
-        envoltorio=envoltorio,
-        ruta_base=ruta_base,
-    )
+    try:
+        guardar_en_bronce(
+            recurso="applist",
+            fecha=fecha,
+            appid=lote_idx,
+            envoltorio=envoltorio,
+            ruta_base=ruta_base,
+        )
+    except BronzeImmutabilityError:
+        pass
 
 
 def descubrir_catalogo_steam(
