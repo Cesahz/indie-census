@@ -1,4 +1,4 @@
-#suite de pruebas para clasificador de divulgacion de IA
+#suite de pruebas para clasificador de divulgacion de ia
 #incluye prueba de contencion etica: prohibido el analisis visual o de estilo
 import pytest
 
