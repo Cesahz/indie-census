@@ -342,6 +342,17 @@ def test_get_app_list_batch_toma_variable_de_entorno(monkeypatch: pytest.MonkeyP
     assert "key=CLAVE_DESDE_ENV_XYZ" in llamada_url
 
 
+def test_steam_client_carga_api_key_desde_archivo_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    #si STEAM_API_KEY no esta en entorno pero existe en .env, se carga de forma transparente
+    monkeypatch.delenv("STEAM_API_KEY", raising=False)
+    archivo_env = tmp_path / ".env"
+    archivo_env.write_text("STEAM_API_KEY=CLAVE_DESDE_ARCHIVO_ENV\nOTRA_VAR=123\n", encoding="utf-8")
+
+    mock_session = MagicMock(spec=requests.Session)
+    cliente = SteamClient(api_key=None, session=mock_session, ruta_env=archivo_env)
+    assert cliente.api_key == "CLAVE_DESDE_ARCHIVO_ENV"
+
+
 def test_iterar_catalogo_completo_multiples_paginas() -> None:
     #el generador debe paginar automaticamente acumulando registros hasta have_more_results False
     pagina_1 = {
