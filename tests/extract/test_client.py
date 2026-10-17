@@ -281,3 +281,121 @@ def test_retry_after_no_numerico_usa_backoff_exponencial() -> None:
     #2.0 * (2 ** 0) = 2.0
     assert pausas == [2.0]
 
+
+# ---------------------------------------------------------------------------
+# pruebas de autenticacion y paginacion de catalogo (criterio f3-01)
+# ---------------------------------------------------------------------------
+
+def test_get_app_list_batch_exitoso() -> None:
+    #consultar lote de aplicaciones con clave valida y parametros correctos
+    datos_simulados = {
+        "response": {
+            "apps": [
+                {"appid": 10, "name": "Counter-Strike", "last_modified": 1700000000},
+                {"appid": 20, "name": "Team Fortress Classic", "last_modified": 1700000001},
+            ],
+            "have_more_results": True,
+            "last_appid": 20,
+        }
+    }
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.return_value = DummyResponse(status_code=200, json_data=datos_simulados)
+
+    cliente = SteamClient(api_key="CLAVE_PRUEBA_123", session=mock_session)
+    resultado = cliente.get_app_list_batch(last_appid=0, max_results=50, include_games=True)
+
+    assert resultado == datos_simulados
+    mock_session.get.assert_called_once()
+    llamada_url = mock_session.get.call_args[0][0]
+    assert "key=CLAVE_PRUEBA_123" in llamada_url
+    assert "last_appid=0" in llamada_url
+    assert "max_results=50" in llamada_url
+    assert "include_games=true" in llamada_url
+    assert "IStoreService/GetAppList/v1" in llamada_url
+
+
+def test_get_app_list_batch_sin_clave_lanza_error() -> None:
+    #invocar get_app_list_batch sin api_key ni variable de entorno lanza SteamClientError
+    mock_session = MagicMock(spec=requests.Session)
+    cliente = SteamClient(api_key=None, session=mock_session)
+
+    #asegurar que no tome variable de entorno externa durante la prueba hermetica
+    cliente.api_key = None
+    with pytest.raises(SteamClientError) as exc_info:
+        cliente.get_app_list_batch()
+
+    assert "api_key" in str(exc_info.value).lower()
+
+
+def test_get_app_list_batch_toma_variable_de_entorno(monkeypatch: pytest.MonkeyPatch) -> None:
+    #si api_key es None pero STEAM_API_KEY esta en el entorno, se utiliza automaticamente
+    monkeypatch.setenv("STEAM_API_KEY", "CLAVE_DESDE_ENV_XYZ")
+    datos_simulados = {"response": {"apps": [], "have_more_results": False}}
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.return_value = DummyResponse(status_code=200, json_data=datos_simulados)
+
+    cliente = SteamClient(api_key=None, session=mock_session)
+    resultado = cliente.get_app_list_batch()
+
+    assert resultado == datos_simulados
+    llamada_url = mock_session.get.call_args[0][0]
+    assert "key=CLAVE_DESDE_ENV_XYZ" in llamada_url
+
+
+def test_iterar_catalogo_completo_multiples_paginas() -> None:
+    #el generador debe paginar automaticamente acumulando registros hasta have_more_results False
+    pagina_1 = {
+        "response": {
+            "apps": [{"appid": 100, "name": "Juego A"}, {"appid": 200, "name": "Juego B"}],
+            "have_more_results": True,
+            "last_appid": 200,
+        }
+    }
+    pagina_2 = {
+        "response": {
+            "apps": [{"appid": 300, "name": "Juego C"}],
+            "have_more_results": False,
+            "last_appid": 300,
+        }
+    }
+
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.side_effect = [
+        DummyResponse(status_code=200, json_data=pagina_1),
+        DummyResponse(status_code=200, json_data=pagina_2),
+    ]
+
+    cliente = SteamClient(api_key="CLAVE_TEST", session=mock_session)
+    juegos = list(cliente.iterar_catalogo_completo(batch_size=2))
+
+    assert len(juegos) == 3
+    assert [j["appid"] for j in juegos] == [100, 200, 300]
+    assert mock_session.get.call_count == 2
+
+
+def test_iterar_catalogo_completo_limite_max_total() -> None:
+    #si se especifica max_total, la iteracion se detiene inmediatamente al alcanzar el tope
+    pagina_1 = {
+        "response": {
+            "apps": [
+                {"appid": 1, "name": "Juego 1"},
+                {"appid": 2, "name": "Juego 2"},
+                {"appid": 3, "name": "Juego 3"},
+            ],
+            "have_more_results": True,
+            "last_appid": 3,
+        }
+    }
+
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.return_value = DummyResponse(status_code=200, json_data=pagina_1)
+
+    cliente = SteamClient(api_key="CLAVE_TEST", session=mock_session)
+    juegos = list(cliente.iterar_catalogo_completo(max_total=2, batch_size=10))
+
+    assert len(juegos) == 2
+    assert [j["appid"] for j in juegos] == [1, 2]
+    #solo debio consumir la primera pagina y detener el generador
+    assert mock_session.get.call_count == 1
+
+
