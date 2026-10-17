@@ -257,6 +257,7 @@ def ejecutar_ingesta_masiva(
 
     return {
         "total_solicitados": total_solicitados,
+        "total_juegos": total_solicitados,
         "ya_completados": ya_completados,
         "procesados_exito": procesados_exito,
         "fallidos": fallidos,

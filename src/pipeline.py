@@ -181,8 +181,9 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
     if extraccion is None:
         print("Extraccion: omitida")
     else:
+        total = extraccion.get("total_juegos", extraccion.get("total_solicitados", 0))
         print(
-            f"Extraccion: {extraccion['procesados_exito']}/{extraccion['total_juegos']} juegos, "
+            f"Extraccion: {extraccion['procesados_exito']}/{total} juegos, "
             f"{extraccion['fallidos']} fallidos"
         )
     print(f"Plata dim_game: {plata['filas_dim_game']} filas -> {plata['dim_game']}")
