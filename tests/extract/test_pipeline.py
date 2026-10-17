@@ -327,7 +327,7 @@ def test_descubrir_catalogo_steam_persiste_en_bronce(tmp_path: Path) -> None:
     assert archivo_lote.exists()
     datos_lote = json.loads(archivo_lote.read_text(encoding="utf-8"))
     assert datos_lote["meta"]["fuente"] == "steam.applist"
-    assert len(datos_lote["payload"]["apps"]) == 3
+    assert len(datos_lote["payload"]["response"]["apps"]) == 3
 
 
 def test_ejecutar_ingesta_masiva_idempotente(

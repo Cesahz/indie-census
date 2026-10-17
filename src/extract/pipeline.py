@@ -152,3 +152,111 @@ def ejecutar_extraccion_muestra(
         "fallidos": fallidos,
         "errores": errores,
     }
+
+
+def _guardar_lote_catalogo(
+    apps: list[dict[str, Any]],
+    lote_idx: int,
+    fecha: str,
+    ruta_base: Optional[Path],
+) -> None:
+    #guardar lote de apps descubiertas en capa bronce
+    payload = {"response": {"apps": apps, "total_apps": len(apps)}}
+    envoltorio = crear_envoltorio_bronce(
+        fuente="steam.applist",
+        url_solicitada="https://api.steampowered.com/IStoreService/GetAppList/v1/",
+        parametros={"lote_idx": lote_idx, "total_en_lote": len(apps)},
+        estado_http=200,
+        payload=payload,
+    )
+    guardar_en_bronce(
+        recurso="applist",
+        fecha=fecha,
+        appid=lote_idx,
+        envoltorio=envoltorio,
+        ruta_base=ruta_base,
+    )
+
+
+def descubrir_catalogo_steam(
+    client: SteamClient,
+    max_juegos: Optional[int] = None,
+    batch_size: int = 50000,
+    fecha: Optional[str] = None,
+    ruta_base: Optional[Path] = None,
+) -> list[int]:
+    """Descubrir catalogo en Steam, persistir lotes crudos en capa Bronce y retornar appids."""
+    if fecha is None:
+        fecha = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    appids: list[int] = []
+    lote_apps: list[dict[str, Any]] = []
+    lote_idx = 0
+
+    for app in client.iterar_catalogo_completo(max_total=max_juegos, batch_size=batch_size):
+        appid = int(app["appid"])
+        appids.append(appid)
+        lote_apps.append(app)
+
+        if len(lote_apps) >= batch_size:
+            _guardar_lote_catalogo(lote_apps, lote_idx, fecha, ruta_base)
+            lote_idx += 1
+            lote_apps = []
+
+    if lote_apps or lote_idx == 0:
+        _guardar_lote_catalogo(lote_apps, lote_idx, fecha, ruta_base)
+
+    return appids
+
+
+def ejecutar_ingesta_masiva(
+    appids: list[int],
+    client: Optional[SteamClient] = None,
+    checkpoint: Optional[GestorCheckpoint] = None,
+    fecha: Optional[str] = None,
+    ruta_base: Optional[Path] = None,
+) -> dict[str, Any]:
+    """Orquestar la ingesta secuencial masiva de appids con checkpoints e idempotencia."""
+    cliente_activo = client or SteamClient()
+    ruta_check = (ruta_base or RUTA_DATA_DEFAULT) / "checkpoint.json"
+    cp_activo = checkpoint or GestorCheckpoint(ruta_archivo=ruta_check)
+
+    if fecha is None:
+        fecha = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    total_solicitados = len(appids)
+    ya_completados = 0
+    procesados_exito = 0
+    fallidos = 0
+    errores: list[dict[str, Any]] = []
+
+    for appid in appids:
+        #verificar si ambos recursos estan completados
+        det_completado = cp_activo.esta_completado("appdetails", appid)
+        rev_completado = cp_activo.esta_completado("appreviews_resumen", appid)
+
+        if det_completado and rev_completado:
+            ya_completados += 1
+            continue
+
+        try:
+            extraer_juego(
+                client=cliente_activo,
+                checkpoint=cp_activo,
+                appid=appid,
+                fecha=fecha,
+                ruta_base=ruta_base,
+            )
+            procesados_exito += 1
+        except Exception as exc:
+            fallidos += 1
+            errores.append({"appid": appid, "error": str(exc)})
+
+    return {
+        "total_solicitados": total_solicitados,
+        "ya_completados": ya_completados,
+        "procesados_exito": procesados_exito,
+        "fallidos": fallidos,
+        "errores": errores,
+    }
+

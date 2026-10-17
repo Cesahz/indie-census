@@ -14,7 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RUTA_DATA_DEFAULT = PROJECT_ROOT / "data"
 
 #recursos permitidos en la particion de steam
-RECURSOS_ADMITIDOS = {"appdetails", "appreviews_resumen"}
+RECURSOS_ADMITIDOS = {"appdetails", "appreviews_resumen", "applist"}
 
 class BronzeImmutabilityError(FileExistsError):
     """Error bloqueante: intento de sobreescritura sobre archivo existente en bronce."""
