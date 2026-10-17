@@ -94,7 +94,9 @@ def ejecutar_pipeline(
     #2 y 3. transformacion a plata con contratos evaluados en memoria antes de persistir
     def validador(dim_game: pa.Table, game_review_summary: pa.Table) -> None:
         cardinalidad = dim_game.num_rows if modo == "masivo" else cardinalidad_esperada
-        validar_contratos_plata(dim_game, game_review_summary, cardinalidad_esperada=cardinalidad)
+        validar_contratos_plata(
+            dim_game, game_review_summary, cardinalidad_esperada=cardinalidad, modo=modo
+        )
 
     resultado_plata = ejecutar_transformacion_plata(
         ruta_base=base,

@@ -10,6 +10,8 @@ import pyarrow as pa
 CARDINALIDAD_MUESTRA = 100
 FECHA_MINIMA = date(2024, 1, 1)
 FECHA_MAXIMA = date(2026, 12, 31)
+FECHA_MINIMA_CATALOGO = date(1997, 1, 1)
+FECHA_MAXIMA_CATALOGO = date(2030, 12, 31)
 GRUPOS_VALIDOS = {"godot", "general"}
 NIVELES_EVIDENCIA_GODOT = {1, 2}
 MOTORES_VALIDOS = {"godot", "unity", "unreal", "gamemaker", "custom", "other", "unknown"}
@@ -243,14 +245,17 @@ def validar_contratos_plata(
     dim_game: pa.Table,
     game_review_summary: pa.Table,
     cardinalidad_esperada: int = CARDINALIDAD_MUESTRA,
+    modo: str = "control",
 ) -> None:
     """Ejecutar la matriz completa de contratos en orden y bloquear ante la primera violacion."""
+    desde = FECHA_MINIMA if modo == "control" else FECHA_MINIMA_CATALOGO
+    hasta = FECHA_MAXIMA if modo == "control" else FECHA_MAXIMA_CATALOGO
     contratos: list[Callable[[pa.Table, pa.Table], None]] = [
         validar_no_nulos,
         validar_unicidad,
         lambda d, r: validar_cardinalidad(d, r, esperado=cardinalidad_esperada),
         validar_integridad_referencial,
-        validar_ventana_temporal,
+        lambda d, r: validar_ventana_temporal(d, r, desde=desde, hasta=hasta),
         validar_coherencia_aritmetica,
         validar_coherencia_precio,
         validar_evidencia_motor,
