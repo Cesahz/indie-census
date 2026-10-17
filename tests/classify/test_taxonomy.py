@@ -82,6 +82,7 @@ def test_publishers_excluidos_presentes() -> None:
     assert "ubisoft" in pubs_lower
     assert "square enix" in pubs_lower
     assert "activision" in pubs_lower
+    assert "valve" in pubs_lower
 
 
 def test_validacion_pydantic_falla_si_estructura_invalida() -> None:
