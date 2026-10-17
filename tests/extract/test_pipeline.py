@@ -330,6 +330,26 @@ def test_descubrir_catalogo_steam_persiste_en_bronce(tmp_path: Path) -> None:
     assert len(datos_lote["payload"]["response"]["apps"]) == 3
 
 
+def test_descubrir_catalogo_steam_idempotente_si_lote_ya_existe(tmp_path: Path) -> None:
+    #si el lote ya existe en bronce para esa fecha, se tolera sin error respetando la inmutabilidad
+    apps_simuladas = [{"appid": 101, "name": "Indie Uno"}]
+    mock_client = MagicMock(spec=SteamClient)
+    mock_client.iterar_catalogo_completo.return_value = iter(apps_simuladas)
+
+    #primera pasada
+    appids_1 = descubrir_catalogo_steam(
+        client=mock_client, max_juegos=1, fecha="2026-10-17", ruta_base=tmp_path
+    )
+    assert appids_1 == [101]
+
+    #segunda pasada con los mismos datos
+    mock_client.iterar_catalogo_completo.return_value = iter(apps_simuladas)
+    appids_2 = descubrir_catalogo_steam(
+        client=mock_client, max_juegos=1, fecha="2026-10-17", ruta_base=tmp_path
+    )
+    assert appids_2 == [101]
+
+
 def test_ejecutar_ingesta_masiva_idempotente(
     tmp_path: Path, mock_steam_client: SteamClient
 ) -> None:
