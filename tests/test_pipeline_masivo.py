@@ -7,7 +7,7 @@ import pyarrow.parquet as pq
 
 from src.extract.bronce import crear_envoltorio_bronce, guardar_en_bronce
 from src.extract.client import SteamClient
-from src.pipeline import _construir_parser, ejecutar_pipeline
+from src.pipeline import _construir_parser, ejecutar_pipeline, main
 from src.transform.plata import construir_tablas_plata
 
 
@@ -142,3 +142,27 @@ def test_ejecutar_pipeline_modo_masivo_con_descubrimiento_e2e(tmp_path: Path) ->
     #verificar base sqlite
     archivo_db = tmp_path / "oro" / "indie_census_mart.db"
     assert archivo_db.is_file()
+
+
+def test_cli_main_modo_masivo_exitoso(tmp_path: Path) -> None:
+    #main() en modo masivo debe imprimir reporte y retornar 0
+    apps_catalogo = [{"appid": 901, "name": "Juego 901"}]
+    mock_client = MagicMock(spec=SteamClient)
+    mock_client.iterar_catalogo_completo.return_value = iter(apps_catalogo)
+    mock_client.get_app_details.side_effect = lambda aid: _crear_payload_appdetails(aid, f"Juego {aid}")
+    mock_client.get_app_reviews_summary.side_effect = lambda aid: _crear_payload_reviews(aid)
+    mock_client.base_url_store = "https://store.steampowered.com/api"
+    mock_client.country_code = "US"
+    mock_client.language = "english"
+
+    codigo = main(
+        [
+            "--ruta-base", str(tmp_path),
+            "--modo", "masivo",
+            "--descubrir",
+            "--max-juegos", "1",
+            "--generar-oro",
+        ],
+        client=mock_client,
+    )
+    assert codigo == 0
