@@ -12,6 +12,8 @@ import pyarrow as pa
 # pyrefly: ignore [missing-import]
 import pyarrow.parquet as pq
 
+from src.analysis.boxleiter import calcular_metricas_boxleiter
+from src.quality.contratos import validar_metricas_comerciales_oro
 from src.transform.plata import ARCHIVO_DIM_GAME, ARCHIVO_GAME_REVIEW_SUMMARY
 
 #nombres de los meses y dias en ingles independientes de locale
@@ -70,6 +72,7 @@ ESQUEMA_FACT_GAME_PERFORMANCE = pa.schema([
     pa.field("est_copies_mid", pa.int64()),
     pa.field("est_copies_max", pa.int64()),
     pa.field("est_gross_revenue_usd", pa.float64()),
+    pa.field("est_net_revenue_usd", pa.float64()),
     pa.field("language_count", pa.int32()),
 ])
 
@@ -179,10 +182,19 @@ def construir_tablas_oro(
         price_usd = 0.0 if (is_free or price_cents is None) else round(price_cents / 100.0, 2)
         approval = round(pos / tot, 4) if tot > 0 else 0.0
 
-        copies_min = tot * 30
-        copies_mid = tot * 40
-        copies_max = tot * 60
-        gross_rev = round(copies_mid * price_usd, 2)
+        anio_lanzamiento = None
+        if release_date and "-" in release_date:
+            try:
+                anio_lanzamiento = int(release_date.split("-")[0])
+            except ValueError:
+                anio_lanzamiento = None
+
+        est_box = calcular_metricas_boxleiter(
+            total_reviews=tot,
+            price_usd=price_usd,
+            release_year=anio_lanzamiento,
+            is_free=is_free,
+        )
 
         filas_fact.append({
             "game_id": gid,
@@ -193,10 +205,11 @@ def construir_tablas_oro(
             "total_negative": neg,
             "total_reviews": tot,
             "approval_rate": approval,
-            "est_copies_min": copies_min,
-            "est_copies_mid": copies_mid,
-            "est_copies_max": copies_max,
-            "est_gross_revenue_usd": gross_rev,
+            "est_copies_min": est_box.est_copies_min,
+            "est_copies_mid": est_box.est_copies_mid,
+            "est_copies_max": est_box.est_copies_max,
+            "est_gross_revenue_usd": est_box.est_gross_revenue_usd,
+            "est_net_revenue_usd": est_box.est_net_revenue_usd,
             "language_count": lang_count,
         })
 
@@ -299,6 +312,7 @@ def exportar_a_sqlite(mart: dict[str, pa.Table], ruta_sqlite: Path) -> None:
                 est_copies_mid INTEGER,
                 est_copies_max INTEGER,
                 est_gross_revenue_usd REAL,
+                est_net_revenue_usd REAL,
                 language_count INTEGER,
                 FOREIGN KEY (game_id) REFERENCES dim_game (game_id),
                 FOREIGN KEY (release_date_key) REFERENCES dim_date (date_key)
@@ -342,7 +356,7 @@ def exportar_a_sqlite(mart: dict[str, pa.Table], ruta_sqlite: Path) -> None:
                 :game_id, :release_date_key, :price_usd, :is_free,
                 :total_positive, :total_negative, :total_reviews,
                 :approval_rate, :est_copies_min, :est_copies_mid,
-                :est_copies_max, :est_gross_revenue_usd, :language_count
+                :est_copies_max, :est_gross_revenue_usd, :est_net_revenue_usd, :language_count
             )""",
             d_fact,
         )
@@ -380,6 +394,9 @@ def ejecutar_transformacion_oro(
     tabla_reviews_plata = pq.read_table(archivo_rev)
 
     mart = construir_tablas_oro(tabla_dim_plata, tabla_reviews_plata)
+
+    #validar contratos de consistencia comercial en capa oro
+    validar_metricas_comerciales_oro(mart["fact_game_performance"])
 
     #persistir en data/oro/mart/*.parquet
     persistir_mart_parquet(mart, ruta_oro / "mart")

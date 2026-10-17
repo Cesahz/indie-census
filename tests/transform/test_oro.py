@@ -104,10 +104,11 @@ def test_construir_tablas_oro_metricas_y_relaciones() -> None:
     assert fact["is_free"][idx_101] is False
     assert fact["total_reviews"][idx_101] == 100
     assert fact["approval_rate"][idx_101] == 0.9
-    assert fact["est_copies_min"][idx_101] == 3000
-    assert fact["est_copies_mid"][idx_101] == 4000
-    assert fact["est_copies_max"][idx_101] == 6000
-    assert round(fact["est_gross_revenue_usd"][idx_101], 2) == round(4000 * 19.99, 2)
+    assert fact["est_copies_min"][idx_101] == 2000
+    assert fact["est_copies_mid"][idx_101] == 3000
+    assert fact["est_copies_max"][idx_101] == 4500
+    assert round(fact["est_gross_revenue_usd"][idx_101], 2) == round(3000 * 19.99, 2)
+    assert round(fact["est_net_revenue_usd"][idx_101], 2) == round(3000 * 19.99 * 0.58, 2)
     assert fact["release_date_key"][idx_101] == 20240529
 
     #verificar juego 102 (gratuito)
@@ -216,7 +217,7 @@ def test_exportar_a_sqlite(tmp_path: Path) -> None:
     assert fila[1] == "Juego Alpha"
     assert fila[2] == 2024
     assert fila[3] == 19.99
-    assert fila[4] == 4000
+    assert fila[4] == 3000
     assert fila[5] == "godot"
     assert fila[6] == 0.85
     assert fila[7] == 1

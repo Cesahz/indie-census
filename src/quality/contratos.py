@@ -259,3 +259,53 @@ def validar_contratos_plata(
     for contrato in contratos:
         contrato(dim_game, game_review_summary)
 
+
+def validar_metricas_comerciales_oro(fact_game_performance: pa.Table) -> None:
+    """Contrato 10: validar consistencia y monotonia de metricas comerciales en capa oro."""
+    dict_fact = fact_game_performance.to_pydict()
+    num_filas = len(dict_fact["game_id"])
+
+    copias_min = dict_fact.get("est_copies_min", [])
+    copias_mid = dict_fact.get("est_copies_mid", [])
+    copias_max = dict_fact.get("est_copies_max", [])
+    gross_rev = dict_fact.get("est_gross_revenue_usd", [])
+    net_rev = dict_fact.get("est_net_revenue_usd", [])
+    is_free = dict_fact.get("is_free", [])
+
+    for i in range(num_filas):
+        c_min = copias_min[i] or 0
+        c_mid = copias_mid[i] or 0
+        c_max = copias_max[i] or 0
+        g_rev = gross_rev[i] or 0.0
+        n_rev = net_rev[i] or 0.0
+        free = bool(is_free[i]) if is_free else False
+
+        #1. validar no-negatividad
+        if c_min < 0 or c_mid < 0 or c_max < 0 or g_rev < 0.0 or n_rev < 0.0:
+            raise ContratoCalidadError(
+                "metricas_comerciales_oro",
+                f"Metricas comerciales no pueden ser negativas en fila {i}",
+            )
+
+        #2. validar monotonia de intervalos
+        if not (c_min <= c_mid <= c_max):
+            raise ContratoCalidadError(
+                "metricas_comerciales_oro",
+                f"Violacion de monotonia en estimacion de copias (min={c_min}, mid={c_mid}, max={c_max}) en fila {i}",
+            )
+
+        #3. validar relacion de ingreso neto vs bruto
+        if n_rev > g_rev:
+            raise ContratoCalidadError(
+                "metricas_comerciales_oro",
+                f"El ingreso neto ({n_rev}) no puede exceder al ingreso bruto ({g_rev}) en fila {i}",
+            )
+
+        #4. validar consistencia en titulos gratuitos
+        if free and g_rev > 0.0:
+            raise ContratoCalidadError(
+                "metricas_comerciales_oro",
+                f"Un juego gratuito no puede registrar ingresos brutos positivos ({g_rev}) en fila {i}",
+            )
+
+
