@@ -12,11 +12,14 @@ FECHA_MINIMA = date(2024, 1, 1)
 FECHA_MAXIMA = date(2026, 12, 31)
 GRUPOS_VALIDOS = {"godot", "general"}
 NIVELES_EVIDENCIA_GODOT = {1, 2}
+MOTORES_VALIDOS = {"godot", "unity", "unreal", "gamemaker", "custom", "other", "unknown"}
+NIVELES_DIVULGACION_IA = {"declared", "tagged", "self_reported", "unknown"}
 
 #campos que nunca pueden contener nulos (precio y evidencia son condicionales)
 OBLIGATORIOS_DIM_GAME = (
     "game_id", "title", "release_date", "is_free", "genres", "language_count", "developers",
-    "publishers", "group", "source", "extracted_at", "pipeline_version",
+    "publishers", "group", "engine", "indie_score", "is_indie", "ai_disclosure_level",
+    "source", "extracted_at", "pipeline_version",
 )
 OBLIGATORIOS_GAME_REVIEW_SUMMARY = (
     "game_id", "total_positive", "total_negative", "total_reviews", "extracted_at", "pipeline_version",
@@ -186,6 +189,56 @@ def validar_evidencia_motor(dim_game: pa.Table, game_review_summary: pa.Table) -
         )
 
 
+def validar_clasificacion_semantica(dim_game: pa.Table, game_review_summary: pa.Table) -> None:
+    """Contrato 9: validar dominios y consistencia de las columnas semanticas."""
+    filas = dim_game.select([
+        "game_id", "group", "engine", "engine_evidence_level", "indie_score", "is_indie", "ai_disclosure_level"
+    ]).to_pylist()
+
+    motores_invalidos = [(f["game_id"], f["engine"]) for f in filas if f["engine"] not in MOTORES_VALIDOS]
+    if motores_invalidos:
+        ids = [m[0] for m in motores_invalidos]
+        detalles_motores = ", ".join(f"{m[1]} (id {m[0]})" for m in motores_invalidos[:5])
+        raise ContratoCalidadError(
+            "clasificacion_semantica",
+            f"Valor de engine desconocido o invalido [{detalles_motores}] en game_id: {_resumir_ids(ids)}",
+        )
+
+    indie_score_invalidos = [
+        f["game_id"] for f in filas
+        if f["indie_score"] is None or not isinstance(f["indie_score"], (int, float)) or not (0.0 <= f["indie_score"] <= 1.0)
+    ]
+    if indie_score_invalidos:
+        raise ContratoCalidadError(
+            "clasificacion_semantica",
+            f"Valor de indie_score fuera del rango [0.0, 1.0] o nulo en game_id: {_resumir_ids(indie_score_invalidos)}",
+        )
+
+    is_indie_invalidos = [f["game_id"] for f in filas if not isinstance(f["is_indie"], bool)]
+    if is_indie_invalidos:
+        raise ContratoCalidadError(
+            "clasificacion_semantica",
+            f"Valor de is_indie no booleano o nulo en game_id: {_resumir_ids(is_indie_invalidos)}",
+        )
+
+    ai_invalidos = [f["game_id"] for f in filas if f["ai_disclosure_level"] not in NIVELES_DIVULGACION_IA]
+    if ai_invalidos:
+        raise ContratoCalidadError(
+            "clasificacion_semantica",
+            f"Nivel de ai_disclosure_level invalido en game_id: {_resumir_ids(ai_invalidos)}",
+        )
+
+    #consistencia: si el grupo es godot, el motor debe ser godot
+    godot_inconsistentes = [
+        f["game_id"] for f in filas if f["group"] == "godot" and f["engine"] != "godot"
+    ]
+    if godot_inconsistentes:
+        raise ContratoCalidadError(
+            "clasificacion_semantica",
+            f"Juego con group='godot' pero engine != 'godot' en game_id: {_resumir_ids(godot_inconsistentes)}",
+        )
+
+
 def validar_contratos_plata(
     dim_game: pa.Table,
     game_review_summary: pa.Table,
@@ -201,6 +254,8 @@ def validar_contratos_plata(
         validar_coherencia_aritmetica,
         validar_coherencia_precio,
         validar_evidencia_motor,
+        validar_clasificacion_semantica,
     ]
     for contrato in contratos:
         contrato(dim_game, game_review_summary)
+

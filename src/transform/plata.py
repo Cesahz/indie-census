@@ -11,6 +11,9 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import yaml
 
+from src.classify.ai import clasificar_divulgacion_ia
+from src.classify.engine import clasificar_motor
+from src.classify.indie import calcular_indie_score
 from src.version import PIPELINE_VERSION
 
 #rutas canonicas por defecto del repositorio
@@ -34,7 +37,11 @@ ESQUEMA_DIM_GAME = pa.schema([
     pa.field("developers", pa.list_(pa.string())),
     pa.field("publishers", pa.list_(pa.string())),
     pa.field("group", pa.string()),
+    pa.field("engine", pa.string()),
     pa.field("engine_evidence_level", pa.int8()),
+    pa.field("indie_score", pa.float64()),
+    pa.field("is_indie", pa.bool_()),
+    pa.field("ai_disclosure_level", pa.string()),
     pa.field("source", pa.string()),
     pa.field("extracted_at", pa.string()),
     pa.field("pipeline_version", pa.string()),
@@ -143,6 +150,16 @@ def parsear_appdetails(envoltorio: dict[str, Any], appid: int) -> dict[str, Any]
 
     generos = data.get("genres")
     descripciones = [g.get("description") for g in generos if isinstance(g, dict)] if isinstance(generos, list) else []
+    desc_html = (
+        data.get("detailed_description")
+        or data.get("about_the_game")
+        or data.get("short_description")
+        or ""
+    )
+    desc_texto = _RE_ETIQUETA_HTML.sub(" ", str(desc_html)).strip()
+    descriptors_dict = data.get("content_descriptors") or {}
+    descriptors_notes = descriptors_dict.get("notes")
+    descriptors_list = [str(descriptors_notes)] if descriptors_notes else []
 
     return {
         "game_id": int(appid),
@@ -156,6 +173,8 @@ def parsear_appdetails(envoltorio: dict[str, Any], appid: int) -> dict[str, Any]
         "publishers": _lista_cadenas(data.get("publishers")),
         "source": meta.get("fuente"),
         "extracted_at": meta.get("extraido_en"),
+        "_desc_texto": desc_texto,
+        "_descriptors_steam": descriptors_list,
     }
 
 
@@ -250,8 +269,46 @@ def construir_tablas_plata(
             str(item["release_date"]) if item.get("release_date") is not None else None
         )
         fila_dim["group"] = item.get("grupo")
-        nivel = item.get("evidencia_nivel")
-        fila_dim["engine_evidence_level"] = int(nivel) if nivel is not None else None
+
+        desc_texto = fila_dim.pop("_desc_texto", "")
+        descriptors = fila_dim.pop("_descriptors_steam", [])
+
+        res_motor = clasificar_motor(
+            descripcion=desc_texto,
+            tags=fila_dim["genres"],
+        )
+
+        precio_usd = (
+            0.0 if fila_dim["is_free"]
+            else (fila_dim["price_launch_usd_cents"] / 100.0 if fila_dim["price_launch_usd_cents"] is not None else None)
+        )
+        res_indie = calcular_indie_score(
+            tags=fila_dim["genres"],
+            generos=fila_dim["genres"],
+            developers=fila_dim["developers"],
+            publishers=fila_dim["publishers"],
+            price_usd=precio_usd,
+            language_count=fila_dim["language_count"],
+        )
+
+        res_ia = clasificar_divulgacion_ia(
+            descriptors_steam=descriptors,
+            tags=fila_dim["genres"],
+            descripcion_o_notas=desc_texto,
+        )
+
+        es_grupo_godot = item.get("grupo") == "godot"
+        if es_grupo_godot:
+            fila_dim["engine"] = "godot"
+            nivel = item.get("evidencia_nivel")
+            fila_dim["engine_evidence_level"] = int(nivel) if nivel is not None else (res_motor.evidence_level or 1)
+        else:
+            fila_dim["engine"] = res_motor.engine
+            fila_dim["engine_evidence_level"] = res_motor.evidence_level
+
+        fila_dim["indie_score"] = res_indie.indie_score
+        fila_dim["is_indie"] = res_indie.is_indie
+        fila_dim["ai_disclosure_level"] = res_ia.disclosure_level.value
         fila_dim["pipeline_version"] = version
         fila_resena["pipeline_version"] = version
 

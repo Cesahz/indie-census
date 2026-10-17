@@ -36,7 +36,11 @@ def _crear_tablas_plata_sinteticas() -> tuple[pa.Table, pa.Table]:
         "developers": [["Dev Uno", "Dev Dos"], ["Dev Gratis"], []],
         "publishers": [["Pub Uno"], [], []],
         "group": ["godot", "general", "godot"],
+        "engine": ["godot", "unity", "godot"],
         "engine_evidence_level": [1, None, 2],
+        "indie_score": [0.85, 0.70, 0.90],
+        "is_indie": [True, True, True],
+        "ai_disclosure_level": ["unknown", "unknown", "tagged"],
         "source": ["steam", "steam", "steam"],
         "extracted_at": ["2026-10-01T12:00:00Z"] * 3,
         "pipeline_version": ["0.1.0"] * 3,
@@ -68,6 +72,10 @@ def test_esquemas_arrow_oro_definidos() -> None:
     assert "game_id" in campos_dim_game
     assert "primary_developer" in campos_dim_game
     assert "primary_publisher" in campos_dim_game
+    assert "engine" in campos_dim_game
+    assert "indie_score" in campos_dim_game
+    assert "is_indie" in campos_dim_game
+    assert "ai_disclosure_level" in campos_dim_game
 
     campos_bridge = set(ESQUEMA_DIM_GENRE_BRIDGE.names)
     assert campos_bridge == {"game_id", "genre"}
@@ -196,7 +204,7 @@ def test_exportar_a_sqlite(tmp_path: Path) -> None:
 
     #verificar consulta relacional con join entre hecho y dimensiones
     cursor.execute("""
-        SELECT f.game_id, d.title, dt.year, f.price_usd, f.est_copies_mid
+        SELECT f.game_id, d.title, dt.year, f.price_usd, f.est_copies_mid, d.engine, d.indie_score, d.is_indie
         FROM fact_game_performance f
         JOIN dim_game d ON f.game_id = d.game_id
         JOIN dim_date dt ON f.release_date_key = dt.date_key
@@ -209,6 +217,9 @@ def test_exportar_a_sqlite(tmp_path: Path) -> None:
     assert fila[2] == 2024
     assert fila[3] == 19.99
     assert fila[4] == 4000
+    assert fila[5] == "godot"
+    assert fila[6] == 0.85
+    assert fila[7] == 1
     conexion.close()
 
 

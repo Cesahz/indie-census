@@ -30,7 +30,11 @@ ESQUEMA_DIM_GAME_ORO = pa.schema([
     pa.field("title", pa.string()),
     pa.field("release_date", pa.string()),
     pa.field("group", pa.string()),
+    pa.field("engine", pa.string()),
     pa.field("engine_evidence_level", pa.int8()),
+    pa.field("indie_score", pa.float64()),
+    pa.field("is_indie", pa.bool_()),
+    pa.field("ai_disclosure_level", pa.string()),
     pa.field("primary_developer", pa.string()),
     pa.field("primary_publisher", pa.string()),
     pa.field("is_free", pa.bool_()),
@@ -134,13 +138,22 @@ def construir_tablas_oro(
         primary_dev = devs[0] if len(devs) > 0 else None
         primary_pub = pubs[0] if len(pubs) > 0 else None
 
+        engine = dict_dim.get("engine", [None] * len(dict_dim["game_id"]))[i]
+        indie_score = dict_dim.get("indie_score", [None] * len(dict_dim["game_id"]))[i]
+        is_indie = dict_dim.get("is_indie", [None] * len(dict_dim["game_id"]))[i]
+        ai_disclosure_level = dict_dim.get("ai_disclosure_level", [None] * len(dict_dim["game_id"]))[i]
+
         #1. dimension juego
         filas_dim_game.append({
             "game_id": gid,
             "title": title,
             "release_date": release_date,
             "group": group,
+            "engine": engine,
             "engine_evidence_level": evidence,
+            "indie_score": indie_score,
+            "is_indie": bool(is_indie) if is_indie is not None else None,
+            "ai_disclosure_level": ai_disclosure_level,
             "primary_developer": primary_dev,
             "primary_publisher": primary_pub,
             "is_free": is_free,
@@ -256,7 +269,11 @@ def exportar_a_sqlite(mart: dict[str, pa.Table], ruta_sqlite: Path) -> None:
                 title TEXT NOT NULL,
                 release_date TEXT,
                 "group" TEXT,
+                engine TEXT,
                 engine_evidence_level INTEGER,
+                indie_score REAL,
+                is_indie INTEGER,
+                ai_disclosure_level TEXT,
                 primary_developer TEXT,
                 primary_publisher TEXT,
                 is_free INTEGER
@@ -304,8 +321,9 @@ def exportar_a_sqlite(mart: dict[str, pa.Table], ruta_sqlite: Path) -> None:
         cursor.executemany(
             """INSERT INTO dim_game VALUES (
                 :game_id, :title, :release_date, :group,
-                :engine_evidence_level, :primary_developer,
-                :primary_publisher, :is_free
+                :engine, :engine_evidence_level, :indie_score,
+                :is_indie, :ai_disclosure_level,
+                :primary_developer, :primary_publisher, :is_free
             )""",
             d_game,
         )

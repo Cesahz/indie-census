@@ -13,6 +13,7 @@ from src.quality.contratos import (
     CARDINALIDAD_MUESTRA,
     ContratoCalidadError,
     validar_cardinalidad,
+    validar_clasificacion_semantica,
     validar_coherencia_aritmetica,
     validar_coherencia_precio,
     validar_contratos_plata,
@@ -47,7 +48,11 @@ def _fila_dim(i: int) -> dict[str, Any]:
         "developers": ["Dev"],
         "publishers": ["Pub"],
         "group": "godot" if es_godot else "general",
+        "engine": "godot" if es_godot else "unity",
         "engine_evidence_level": (1 + (i // 2) % 2) if es_godot else None,
+        "indie_score": 0.85 if es_godot else 0.75,
+        "is_indie": True,
+        "ai_disclosure_level": "unknown",
         "source": "steam.appdetails",
         "extracted_at": "2026-10-01T12:00:00Z",
         "pipeline_version": "0.1.0",
@@ -116,7 +121,7 @@ def test_nulos_caso_valido_acepta_precio_y_evidencia_nulos_en_campos_condicional
 
 @pytest.mark.parametrize("campo", [
     "title", "release_date", "is_free", "genres", "language_count", "developers", "publishers",
-    "group", "source", "extracted_at", "pipeline_version",
+    "group", "engine", "indie_score", "is_indie", "ai_disclosure_level", "source", "extracted_at", "pipeline_version",
 ])
 def test_nulos_bloquea_campo_obligatorio_de_dim_game(campo: str) -> None:
     with pytest.raises(ContratoCalidadError, match=campo) as info:
@@ -275,6 +280,47 @@ def test_evidencia_motor_bloquea_godot_sin_nivel_valido(nivel: Optional[int]) ->
 def test_evidencia_motor_bloquea_grupo_desconocido() -> None:
     with pytest.raises(ContratoCalidadError, match="unity"):
         validar_evidencia_motor(*_tablas(mut_dim=_set(1, "group", "unity")))
+
+
+#contrato 9: clasificacion semantica
+
+def test_clasificacion_semantica_caso_valido() -> None:
+    validar_clasificacion_semantica(*_tablas())
+
+
+def test_clasificacion_semantica_bloquea_motor_invalido() -> None:
+    with pytest.raises(ContratoCalidadError, match="motor_inexistente") as info:
+        validar_clasificacion_semantica(*_tablas(mut_dim=_set(1, "engine", "motor_inexistente")))
+    assert info.value.contrato == "clasificacion_semantica"
+
+
+def test_clasificacion_semantica_bloquea_indie_score_fuera_de_rango() -> None:
+    with pytest.raises(ContratoCalidadError, match="indie_score") as info:
+        validar_clasificacion_semantica(*_tablas(mut_dim=_set(2, "indie_score", 1.5)))
+    assert info.value.contrato == "clasificacion_semantica"
+
+
+def test_clasificacion_semantica_bloquea_is_indie_no_booleano() -> None:
+    dim, res = _tablas()
+    col_invalida = pa.array(["no_bool"] * dim.num_rows, type=pa.string())
+    idx = dim.schema.get_field_index("is_indie")
+    dim_invalida = dim.set_column(idx, "is_indie", col_invalida)
+    with pytest.raises(ContratoCalidadError, match="is_indie") as info:
+        validar_clasificacion_semantica(dim_invalida, res)
+    assert info.value.contrato == "clasificacion_semantica"
+
+
+def test_clasificacion_semantica_bloquea_ai_disclosure_invalido() -> None:
+    with pytest.raises(ContratoCalidadError, match="ai_disclosure_level") as info:
+        validar_clasificacion_semantica(*_tablas(mut_dim=_set(4, "ai_disclosure_level", "inventado")))
+    assert info.value.contrato == "clasificacion_semantica"
+
+
+def test_clasificacion_semantica_bloquea_grupo_godot_con_otro_motor() -> None:
+    with pytest.raises(ContratoCalidadError, match="engine != 'godot'") as info:
+        #juego 0 es grupo godot pero mutamos su engine a unity
+        validar_clasificacion_semantica(*_tablas(mut_dim=_set(0, "engine", "unity")))
+    assert info.value.contrato == "clasificacion_semantica"
 
 
 #ejecucion conjunta

@@ -319,7 +319,11 @@ def test_esquema_dim_game_tipos_declarados() -> None:
     assert ESQUEMA_DIM_GAME.field("price_launch_usd_cents").type == pa.int64()
     assert ESQUEMA_DIM_GAME.field("genres").type == pa.list_(pa.string())
     assert ESQUEMA_DIM_GAME.field("language_count").type == pa.int32()
+    assert ESQUEMA_DIM_GAME.field("engine").type == pa.string()
     assert ESQUEMA_DIM_GAME.field("engine_evidence_level").type == pa.int8()
+    assert ESQUEMA_DIM_GAME.field("indie_score").type == pa.float64()
+    assert ESQUEMA_DIM_GAME.field("is_indie").type == pa.bool_()
+    assert ESQUEMA_DIM_GAME.field("ai_disclosure_level").type == pa.string()
     assert ESQUEMA_GAME_REVIEW_SUMMARY.names == [
         "game_id", "total_positive", "total_negative", "total_reviews", "extracted_at", "pipeline_version",
     ]
@@ -329,7 +333,11 @@ def test_construir_tablas_enriquece_con_manifiesto(escenario: dict[str, Path]) -
     dim, _ = construir_tablas_plata(escenario["base"], escenario["manifiesto"], fecha=FECHA)
     filas = {f["game_id"]: f for f in dim.to_pylist()}
     assert filas[1809540]["group"] == "godot"
+    assert filas[1809540]["engine"] == "godot"
     assert filas[1809540]["engine_evidence_level"] == 1
+    assert 0.0 <= filas[1809540]["indie_score"] <= 1.0
+    assert isinstance(filas[1809540]["is_indie"], bool)
+    assert filas[1809540]["ai_disclosure_level"] in ("declared", "tagged", "self_reported", "unknown")
     assert filas[200]["group"] == "general"
     assert filas[200]["engine_evidence_level"] is None
     assert filas[300]["engine_evidence_level"] == 2
