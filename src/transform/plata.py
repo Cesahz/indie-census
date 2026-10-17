@@ -237,10 +237,12 @@ def construir_tablas_plata(
     ruta_manifiesto: Optional[Path] = None,
     fecha: Optional[str] = None,
     version_pipeline: Optional[str] = None,
+    modo: str = "control",
+    appids_objetivo: Optional[list[int]] = None,
 ) -> tuple[pa.Table, pa.Table]:
     """Construir las tablas arrow dim_game y game_review_summary a partir de bronce.
-    Solo se incluyen juegos del manifiesto con appdetails y appreviews validos; los omitidos
-    quedan expuestos a los contratos de cardinalidad e integridad.
+    En modo 'control', lee la muestra definida en el manifiesto yaml.
+    En modo 'masivo', procesa todos los titulos de bronce o los indicados en appids_objetivo.
     Salida:
     - tupla (dim_game, game_review_summary) ordenada por game_id y con esquemas explicitos.
     """
@@ -251,9 +253,19 @@ def construir_tablas_plata(
     detalles = leer_particion_bronce(base, "appdetails", fecha)
     resenas = leer_particion_bronce(base, "appreviews_resumen", fecha)
 
+    #determinar universo de items segun modo
+    if modo == "masivo":
+        if appids_objetivo is not None:
+            candidatos = [int(a) for a in appids_objetivo if a in detalles and a in resenas]
+        else:
+            candidatos = [aid for aid in sorted(detalles.keys()) if aid in resenas]
+        items = [{"appid": aid, "grupo": "general"} for aid in candidatos]
+    else:
+        items = _cargar_manifiesto(ruta_man)
+
     filas_dim: list[dict[str, Any]] = []
     filas_resenas: list[dict[str, Any]] = []
-    for item in _cargar_manifiesto(ruta_man):
+    for item in items:
         appid = int(item["appid"])
         if appid not in detalles or appid not in resenas:
             continue
@@ -363,6 +375,8 @@ def ejecutar_transformacion_plata(
     fecha: Optional[str] = None,
     version_pipeline: Optional[str] = None,
     validador: Optional[Callable[[pa.Table, pa.Table], None]] = None,
+    modo: str = "control",
+    appids_objetivo: Optional[list[int]] = None,
 ) -> dict[str, Any]:
     """Construir, validar opcionalmente y persistir la capa plata.
     El validador se ejecuta en memoria antes de cualquier escritura: si lanza una excepcion,
@@ -370,7 +384,14 @@ def ejecutar_transformacion_plata(
     Salida:
     - diccionario con rutas de los parquet y conteo de filas por tabla.
     """
-    dim_game, resumen = construir_tablas_plata(ruta_base, ruta_manifiesto, fecha, version_pipeline)
+    dim_game, resumen = construir_tablas_plata(
+        ruta_base=ruta_base,
+        ruta_manifiesto=ruta_manifiesto,
+        fecha=fecha,
+        version_pipeline=version_pipeline,
+        modo=modo,
+        appids_objetivo=appids_objetivo,
+    )
     if validador is not None:
         validador(dim_game, resumen)
     rutas = persistir_plata(dim_game, resumen, ruta_base=ruta_base)

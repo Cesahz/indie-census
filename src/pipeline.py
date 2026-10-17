@@ -9,7 +9,12 @@ from typing import Any, Optional
 # pyrefly: ignore [missing-import]
 import pyarrow as pa
 
-from src.extract.pipeline import ejecutar_extraccion_muestra
+from src.extract.client import SteamClient
+from src.extract.pipeline import (
+    descubrir_catalogo_steam,
+    ejecutar_extraccion_muestra,
+    ejecutar_ingesta_masiva,
+)
 from src.quality.contratos import CARDINALIDAD_MUESTRA, ContratoCalidadError, validar_contratos_plata
 from src.transform.oro import ejecutar_transformacion_oro
 from src.transform.plata import ejecutar_transformacion_plata
@@ -30,6 +35,9 @@ def ejecutar_pipeline(
     cardinalidad_esperada: int = CARDINALIDAD_MUESTRA,
     omitir_extraccion: bool = False,
     generar_oro: bool = False,
+    modo: str = "control",
+    max_juegos: Optional[int] = None,
+    descubrir: bool = False,
 ) -> dict[str, Any]:
     """Ejecutar el pipeline completo de forma reproducible.
     Entradas:
@@ -39,13 +47,16 @@ def ejecutar_pipeline(
     - client: cliente steam inyectable; si es None la extraccion construye uno real.
     - fecha: particion AAAA-MM-DD; si es None se extrae en la fecha utc actual y plata usa la
       particion mas reciente disponible por juego.
-    - cardinalidad_esperada: numero exacto de juegos exigido por el contrato de cardinalidad.
+    - cardinalidad_esperada: numero exacto de juegos exigido por el contrato de cardinalidad (modo control).
     - omitir_extraccion: reprocesar unicamente el bronce existente sin contactar a Steam.
     - generar_oro: generar star schema y data mart analitico en capa oro.
+    - modo: 'control' para la muestra de prueba o 'masivo' para el catalogo completo.
+    - max_juegos: limite de titulos a descubrir o extraer en modo masivo.
+    - descubrir: activar descubrimiento por lotes via IStoreService en modo masivo.
     Salida:
-    - diccionario con estado, metricas de extraccion y resultado de plata.
+    - diccionario con estado, metricas de extraccion y resultado de plata y oro.
     Excepciones:
-    - ContratoCalidadError: si plata viola algun contrato; en ese caso no se escribe ningun parquet.
+    - ContratoCalidadError: si plata u oro violan algun contrato bloqueante.
     """
     base = Path(ruta_base) if ruta_base is not None else RUTA_DATA_DEFAULT
     manifiesto = Path(ruta_manifiesto) if ruta_manifiesto is not None else RUTA_MANIFIESTO_DEFAULT
@@ -54,23 +65,43 @@ def ejecutar_pipeline(
     #1. extraccion idempotente hacia bronce
     metricas_extraccion: Optional[dict[str, Any]] = None
     if not omitir_extraccion:
-        metricas_extraccion = ejecutar_extraccion_muestra(
-            ruta_manifiesto=manifiesto,
-            ruta_base=base,
-            ruta_checkpoint=checkpoint,
-            client=client,
-            fecha=fecha,
-        )
+        if modo == "masivo":
+            appids_descubiertos: list[int] = []
+            if descubrir:
+                cliente_steam = client or SteamClient()
+                appids_descubiertos = descubrir_catalogo_steam(
+                    client=cliente_steam,
+                    max_juegos=max_juegos,
+                    fecha=fecha,
+                    ruta_base=base,
+                )
+            metricas_extraccion = ejecutar_ingesta_masiva(
+                appids=appids_descubiertos,
+                client=client,
+                checkpoint=None,
+                fecha=fecha,
+                ruta_base=base,
+            )
+        else:
+            metricas_extraccion = ejecutar_extraccion_muestra(
+                ruta_manifiesto=manifiesto,
+                ruta_base=base,
+                ruta_checkpoint=checkpoint,
+                client=client,
+                fecha=fecha,
+            )
 
     #2 y 3. transformacion a plata con contratos evaluados en memoria antes de persistir
     def validador(dim_game: pa.Table, game_review_summary: pa.Table) -> None:
-        validar_contratos_plata(dim_game, game_review_summary, cardinalidad_esperada=cardinalidad_esperada)
+        cardinalidad = dim_game.num_rows if modo == "masivo" else cardinalidad_esperada
+        validar_contratos_plata(dim_game, game_review_summary, cardinalidad_esperada=cardinalidad)
 
     resultado_plata = ejecutar_transformacion_plata(
         ruta_base=base,
         ruta_manifiesto=manifiesto,
         fecha=fecha,
         validador=validador,
+        modo=modo,
     )
 
     #4. opcional: generacion de data mart analitico en capa oro (parquet y sqlite)
@@ -95,7 +126,7 @@ def _construir_parser() -> argparse.ArgumentParser:
     """Definir los argumentos de linea de comandos del orquestador."""
     parser = argparse.ArgumentParser(
         prog="python -m src.pipeline",
-        description="Ejecuta extraccion, transformacion a plata y contratos de calidad de la muestra de control.",
+        description="Ejecuta extraccion, transformacion a plata y contratos de calidad del censo indie.",
     )
     parser.add_argument("--fecha", default=None, help="Particion AAAA-MM-DD (por defecto fecha utc actual).")
     parser.add_argument("--ruta-base", type=Path, default=None, help="Directorio de datos (por defecto data/).")
@@ -105,6 +136,18 @@ def _construir_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--generar-oro", action="store_true", help="Generar star schema y data mart analitico en capa oro.",
+    )
+    parser.add_argument(
+        "--modo", choices=["control", "masivo"], default="control",
+        help="Modo de ejecucion: control (muestra fija) o masivo (catalogo masivo de Steam).",
+    )
+    parser.add_argument(
+        "--descubrir", action="store_true",
+        help="Ejecutar descubrimiento de catalogo mediante Steam Web API en modo masivo.",
+    )
+    parser.add_argument(
+        "--max-juegos", type=int, default=None,
+        help="Limite maximo de juegos a descubrir/extraer en modo masivo.",
     )
     return parser
 
@@ -121,6 +164,9 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
             fecha=args.fecha,
             omitir_extraccion=args.omitir_extraccion,
             generar_oro=args.generar_oro,
+            modo=args.modo,
+            max_juegos=args.max_juegos,
+            descubrir=args.descubrir,
         )
     except ContratoCalidadError as exc:
         print(f"Pipeline bloqueado por contrato de calidad: {exc}", file=sys.stderr)

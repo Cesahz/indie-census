@@ -1,6 +1,5 @@
 #suite de pruebas para orquestacion masiva de pipeline y soporte cli (criterio f3-04)
 #garantias: hermeticidad total, soporte modo masivo sin manifiesto, generacion de capas oro
-import json
 from pathlib import Path
 from unittest.mock import MagicMock
 #pyrefly: ignore [missing-import]
@@ -22,10 +21,10 @@ def _crear_payload_appdetails(appid: int, nombre: str, price_cents: int = 1499) 
                 "is_free": False,
                 "release_date": {"date": "May 10, 2024"},
                 "price_overview": {"initial": price_cents, "currency": "USD"},
-                "genres": [{"id": "1", "description": "Action"}],
+                "genres": [{"id": "1", "description": "Action"}, {"id": "23", "description": "Indie"}],
                 "supported_languages": "English, Spanish",
                 "developers": ["Estudio Indie"],
-                "publishers": ["Publisher Indie"],
+                "publishers": ["Estudio Indie"],
                 "categories": [{"id": 2, "description": "Single-player"}],
                 "short_description": "A game made in Godot Engine with great mechanics.",
             },
