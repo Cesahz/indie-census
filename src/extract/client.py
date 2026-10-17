@@ -2,6 +2,7 @@
 #soporta backoff exponencial, respeto de Retry-After e inyeccion de pausas
 import os
 import time
+from pathlib import Path
 from typing import Any, Callable, Iterator, Optional
 
 import requests
@@ -41,8 +42,9 @@ class SteamClient:
         base_url_api: str = "https://api.steampowered.com",
         country_code: str = "US",
         language: str = "english",
+        ruta_env: Optional[Path] = None,
     ) -> None:
-        self.api_key = api_key if api_key is not None else os.getenv("STEAM_API_KEY")
+        self.api_key = api_key if api_key is not None else self._resolver_api_key(ruta_env)
         self.session = session or requests.Session()
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
@@ -51,6 +53,48 @@ class SteamClient:
         self.base_url_api = base_url_api.rstrip("/")
         self.country_code = country_code
         self.language = language
+
+    @staticmethod
+    def _resolver_api_key(ruta_env: Optional[Path] = None) -> Optional[str]:
+        """Resolver la clave de steamworks desde entorno o archivo .env."""
+        #1. variable de entorno activa en el sistema
+        clave_env = os.getenv("STEAM_API_KEY")
+        if clave_env:
+            return clave_env
+
+        #2. si python-dotenv esta disponible, intentar cargarlo
+        try:
+            from dotenv import load_dotenv
+
+            load_dotenv(dotenv_path=ruta_env)
+            clave_cargada = os.getenv("STEAM_API_KEY")
+            if clave_cargada:
+                return clave_cargada
+        except ImportError:
+            pass
+
+        #3. lectura directa de archivo .env como fallback
+        posibles_rutas = [
+            ruta_env,
+            Path.cwd() / ".env",
+            Path(__file__).resolve().parents[2] / ".env",
+        ]
+        for ruta in posibles_rutas:
+            if ruta is not None and ruta.is_file():
+                try:
+                    for linea in ruta.read_text(encoding="utf-8").splitlines():
+                        linea = linea.strip()
+                        if not linea or linea.startswith("#"):
+                            continue
+                        if "=" in linea:
+                            clave, valor = linea.split("=", 1)
+                            clave = clave.strip()
+                            valor = valor.strip().strip("'\"")
+                            if clave == "STEAM_API_KEY" and valor:
+                                return valor
+                except Exception:
+                    pass
+        return None
 
     def _ejecutar_solicitud(self, url: str) -> dict[str, Any]:
         """Ejecutar peticion get con manejo de reintentos y 429."""
@@ -124,7 +168,7 @@ class SteamClient:
         include_software: bool = False,
     ) -> dict[str, Any]:
         """Consultar lote de catalogo mediante el servicio oficial IStoreService."""
-        clave = self.api_key or os.getenv("STEAM_API_KEY")
+        clave = self.api_key
         if not clave:
             raise SteamClientError("Se requiere api_key para consultar IStoreService/GetAppList")
 
