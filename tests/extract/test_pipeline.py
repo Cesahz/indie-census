@@ -8,7 +8,12 @@ import yaml
 
 from src.extract.checkpoint import GestorCheckpoint
 from src.extract.client import SteamAppNotFoundError, SteamClient
-from src.extract.pipeline import ejecutar_extraccion_muestra, extraer_juego
+from src.extract.pipeline import (
+    descubrir_catalogo_steam,
+    ejecutar_extraccion_muestra,
+    ejecutar_ingesta_masiva,
+    extraer_juego,
+)
 
 @pytest.fixture
 def mock_steam_client() -> SteamClient:
@@ -291,3 +296,98 @@ def test_extraer_juego_fecha_por_defecto_resuelve_hoy(
     )
 
     assert resultado == {"appdetails": True, "appreviews_resumen": True}
+
+
+# ---------------------------------------------------------------------------
+# pruebas de descubrimiento de catalogo e ingesta masiva (criterio f3-02)
+# ---------------------------------------------------------------------------
+
+def test_descubrir_catalogo_steam_persiste_en_bronce(tmp_path: Path) -> None:
+    #descubrir_catalogo_steam debe llamar a iterar_catalogo_completo, persistir lotes en bronce y retornar appids
+    apps_simuladas = [
+        {"appid": 101, "name": "Indie Uno", "last_modified": 1700000000},
+        {"appid": 102, "name": "Indie Dos", "last_modified": 1700000001},
+        {"appid": 103, "name": "Indie Tres", "last_modified": 1700000002},
+    ]
+
+    mock_client = MagicMock(spec=SteamClient)
+    mock_client.iterar_catalogo_completo.return_value = iter(apps_simuladas)
+
+    ruta_base = tmp_path
+    appids = descubrir_catalogo_steam(
+        client=mock_client,
+        max_juegos=10,
+        fecha="2026-10-17",
+        ruta_base=ruta_base,
+    )
+
+    assert appids == [101, 102, 103]
+    #verificar persistencia del lote en bronce
+    archivo_lote = ruta_base / "bronce" / "steam" / "applist" / "fecha=2026-10-17" / "appid=0.json"
+    assert archivo_lote.exists()
+    datos_lote = json.loads(archivo_lote.read_text(encoding="utf-8"))
+    assert datos_lote["meta"]["fuente"] == "steam.applist"
+    assert len(datos_lote["payload"]["apps"]) == 3
+
+
+def test_ejecutar_ingesta_masiva_idempotente(
+    tmp_path: Path, mock_steam_client: SteamClient
+) -> None:
+    #si parte de los juegos ya estan completados en checkpoint, solo se extraen los pendientes
+    ruta_base = tmp_path
+    ruta_checkpoint = tmp_path / "checkpoint.json"
+    checkpoint = GestorCheckpoint(ruta_archivo=ruta_checkpoint)
+
+    #marcar appids 10 y 20 como completados previamente
+    checkpoint.marcar_completado("appdetails", 10)
+    checkpoint.marcar_completado("appreviews_resumen", 10)
+    checkpoint.marcar_completado("appdetails", 20)
+    checkpoint.marcar_completado("appreviews_resumen", 20)
+
+    appids_universo = [10, 20, 30, 40]
+
+    resumen = ejecutar_ingesta_masiva(
+        appids=appids_universo,
+        client=mock_steam_client,
+        checkpoint=checkpoint,
+        fecha="2026-10-17",
+        ruta_base=ruta_base,
+    )
+
+    assert resumen["total_solicitados"] == 4
+    assert resumen["ya_completados"] == 2
+    assert resumen["procesados_exito"] == 2  #appids 30 y 40
+    assert resumen["fallidos"] == 0
+
+    #verificar que 30 y 40 ahora estan en checkpoint
+    assert checkpoint.esta_completado("appdetails", 30)
+    assert checkpoint.esta_completado("appdetails", 40)
+
+
+def test_ejecutar_ingesta_masiva_tolerante_a_fallos_parciales(
+    tmp_path: Path, mock_steam_client: SteamClient
+) -> None:
+    #ante fallos individuales (ej. appid 999999 no existe), el resto se procesa y se reportan errores
+    ruta_base = tmp_path
+    ruta_checkpoint = tmp_path / "checkpoint.json"
+    checkpoint = GestorCheckpoint(ruta_archivo=ruta_checkpoint)
+
+    appids = [10, 999999, 20]
+
+    resumen = ejecutar_ingesta_masiva(
+        appids=appids,
+        client=mock_steam_client,
+        checkpoint=checkpoint,
+        fecha="2026-10-17",
+        ruta_base=ruta_base,
+    )
+
+    assert resumen["total_solicitados"] == 3
+    assert resumen["procesados_exito"] == 2
+    assert resumen["fallidos"] == 1
+    assert len(resumen["errores"]) == 1
+    assert resumen["errores"][0]["appid"] == 999999
+    assert checkpoint.esta_completado("appdetails", 10)
+    assert checkpoint.esta_completado("appdetails", 20)
+    assert not checkpoint.esta_completado("appdetails", 999999)
+

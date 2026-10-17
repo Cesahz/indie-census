@@ -103,6 +103,38 @@ def test_guardar_en_bronce_crea_particion_correcta(tmp_path: Path) -> None:
     assert contenido_disco == envoltorio
 
 
+def test_guardar_en_bronce_applist_exitoso(tmp_path: Path) -> None:
+    #verificar que el recurso applist es admitido y particiona correctamente
+    payload = {"response": {"apps": [{"appid": 10, "name": "CS"}], "have_more_results": False}}
+    envoltorio = crear_envoltorio_bronce(
+        fuente="steam.applist",
+        url_solicitada="https://api.steampowered.com/IStoreService/GetAppList/v1/",
+        parametros={"max_results": 50000},
+        estado_http=200,
+        payload=payload,
+    )
+
+    ruta_archivo = guardar_en_bronce(
+        recurso="applist",
+        fecha="2026-10-17",
+        appid=0,
+        envoltorio=envoltorio,
+        ruta_base=tmp_path,
+    )
+
+    esperada = (
+        tmp_path
+        / "bronce"
+        / "steam"
+        / "applist"
+        / "fecha=2026-10-17"
+        / "appid=0.json"
+    )
+    assert ruta_archivo == esperada
+    assert ruta_archivo.is_file()
+
+
+
 def test_guardar_en_bronce_rechaza_sobrescritura(tmp_path: Path) -> None:
     #inmutabilidad estricta: un archivo existente no puede ser sobrescrito
     envoltorio = crear_envoltorio_bronce(
