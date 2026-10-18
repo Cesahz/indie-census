@@ -1,5 +1,7 @@
 #modulo orquestador de extraccion de la muestra de control
 #coordina cliente http resiliente, persistencia inmutable en bronce y gestor de checkpoint
+import json
+import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -213,6 +215,120 @@ def descubrir_catalogo_steam(
     return appids
 
 
+def congelar_manifiesto_maestro(
+    client: Optional[SteamClient] = None,
+    min_appid: int = 2400000,
+    max_juegos: Optional[int] = None,
+    fecha: Optional[str] = None,
+    ruta_base: Optional[Path] = None,
+    ruta_destino: Optional[Path] = None,
+) -> Path:
+    """Descubrir catalogo en Steam, filtrar por umbral min_appid y congelar manifest_master.json inmutable."""
+    cliente_activo = client or SteamClient()
+    if fecha is None:
+        fecha = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    appids_encontrados: set[int] = set()
+    for app in cliente_activo.iterar_catalogo_completo():
+        aid = int(app["appid"])
+        if aid >= min_appid:
+            appids_encontrados.add(aid)
+            if max_juegos is not None and len(appids_encontrados) >= max_juegos:
+                break
+
+    appids_ordenados = sorted(appids_encontrados)
+
+    payload = {
+        "descripcion": "Manifiesto maestro inmutable para ingesta distribuida",
+        "criterio_filtro": f"appid >= {min_appid}",
+        "total_appids": len(appids_ordenados),
+        "min_appid": appids_ordenados[0] if appids_ordenados else None,
+        "max_appid": appids_ordenados[-1] if appids_ordenados else None,
+        "appids": appids_ordenados,
+    }
+
+    envoltorio = crear_envoltorio_bronce(
+        fuente="steam.catalog.manifest_master",
+        url_solicitada="IStoreService/GetAppList/v1",
+        parametros={"min_appid": min_appid, "max_juegos": max_juegos},
+        estado_http=200,
+        payload=payload,
+    )
+    envoltorio["meta"]["recurso"] = "applist"
+    envoltorio["meta"]["sha256"] = envoltorio["meta"]["sha256_payload"]
+
+    if ruta_destino is None:
+        base = ruta_base or RUTA_DATA_DEFAULT
+        destino = base / "bronce" / "steam" / fecha / "applist" / "manifest_master.json"
+    else:
+        destino = ruta_destino
+
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    ruta_tmp = destino.with_suffix(".tmp")
+    with open(ruta_tmp, "w", encoding="utf-8") as f:
+        json.dump(envoltorio, f, indent=2, ensure_ascii=False)
+    ruta_tmp.replace(destino)
+
+    return destino
+
+
+def cargar_manifest_master(ruta_manifiesto: Path) -> list[int]:
+    """Cargar lista inmutable de appids desde manifest_master.json."""
+    if not ruta_manifiesto.is_file():
+        raise FileNotFoundError(f"Manifiesto maestro no encontrado: {ruta_manifiesto}")
+
+    with open(ruta_manifiesto, "r", encoding="utf-8") as f:
+        datos = json.load(f)
+
+    if "payload" in datos and isinstance(datos["payload"], dict) and "appids" in datos["payload"]:
+        appids = datos["payload"]["appids"]
+    elif isinstance(datos, list):
+        appids = datos
+    elif "appids" in datos:
+        appids = datos["appids"]
+    else:
+        raise ValueError(f"Formato no reconocido en manifiesto maestro: {ruta_manifiesto}")
+
+    return [int(a) for a in appids]
+
+
+def particionar_appids_por_modulo(
+    appids: list[int],
+    worker_id: int = 0,
+    total_workers: int = 1,
+) -> list[int]:
+    """Filtrar lista de appids mediante congruencia modular asegurando cero huecos y cero solapamiento."""
+    if total_workers < 1:
+        raise ValueError(f"total_workers debe ser >= 1, se recibio {total_workers}")
+    if not (0 <= worker_id < total_workers):
+        raise ValueError(f"worker_id debe estar en [0..{total_workers-1}], se recibio {worker_id}")
+
+    if total_workers == 1:
+        return list(appids)
+
+    return [appid for idx, appid in enumerate(appids) if idx % total_workers == worker_id]
+
+
+def sincronizar_snapshot_tar(
+    ruta_bronce: Path,
+    sync_tar_dir: Path,
+    worker_id: int = 0,
+) -> Path:
+    """Empaquetar atómicamente el directorio local de bronce en un archivo tar.gz en sync_tar_dir."""
+    sync_tar_dir.mkdir(parents=True, exist_ok=True)
+    nombre_final = f"bronce_worker_{worker_id}.tar.gz"
+    ruta_final = sync_tar_dir / nombre_final
+    ruta_tmp = sync_tar_dir / f"bronce_worker_{worker_id}.tmp.tar.gz"
+
+    with tarfile.open(ruta_tmp, "w:gz") as tar:
+        #empaquetar el directorio si existe
+        if ruta_bronce.is_dir():
+            tar.add(ruta_bronce, arcname=ruta_bronce.name)
+
+    ruta_tmp.replace(ruta_final)
+    return ruta_final
+
+
 def ejecutar_ingesta_masiva(
     appids: list[int],
     client: Optional[SteamClient] = None,
@@ -221,11 +337,23 @@ def ejecutar_ingesta_masiva(
     ruta_base: Optional[Path] = None,
     mostrar_progreso: bool = True,
     stream_progreso: Optional[Any] = None,
+    worker_id: int = 0,
+    total_workers: int = 1,
+    sync_tar_dir: Optional[Path] = None,
+    sync_interval: int = 250,
 ) -> dict[str, Any]:
     """Orquestar la ingesta secuencial masiva de appids con checkpoints e idempotencia."""
     cliente_activo = client or SteamClient()
-    ruta_check = (ruta_base or RUTA_DATA_DEFAULT) / "checkpoint.json"
-    cp_activo = checkpoint or GestorCheckpoint(ruta_archivo=ruta_check)
+    base_dir = ruta_base or RUTA_DATA_DEFAULT
+
+    if checkpoint is None:
+        if total_workers > 1:
+            nombre_cp = f"checkpoint_worker_{worker_id}_of_{total_workers}.json"
+        else:
+            nombre_cp = "checkpoint.json"
+        cp_activo = GestorCheckpoint(ruta_archivo=base_dir / nombre_cp)
+    else:
+        cp_activo = checkpoint
 
     if fecha is None:
         fecha = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -235,6 +363,8 @@ def ejecutar_ingesta_masiva(
     procesados_exito = 0
     fallidos = 0
     errores: list[dict[str, Any]] = []
+    juegos_desde_sync = 0
+    ruta_bronce_local = base_dir / "bronce"
 
     barra = BarraProgreso(
         total=total_solicitados,
@@ -242,43 +372,56 @@ def ejecutar_ingesta_masiva(
         habilitado=mostrar_progreso,
     )
 
-    for i, appid in enumerate(appids, start=1):
-        #verificar si ambos recursos estan completados
-        det_completado = cp_activo.esta_completado("appdetails", appid)
-        rev_completado = cp_activo.esta_completado("appreviews_resumen", appid)
+    try:
+        for i, appid in enumerate(appids, start=1):
+            #verificar si ambos recursos estan completados
+            det_completado = cp_activo.esta_completado("appdetails", appid)
+            rev_completado = cp_activo.esta_completado("appreviews_resumen", appid)
 
-        if det_completado and rev_completado:
-            ya_completados += 1
+            if det_completado and rev_completado:
+                ya_completados += 1
+                barra.actualizar(
+                    actual=i,
+                    appid=appid,
+                    exitosos=procesados_exito + ya_completados,
+                    fallidos=fallidos,
+                )
+                continue
+
+            try:
+                extraer_juego(
+                    client=cliente_activo,
+                    checkpoint=cp_activo,
+                    appid=appid,
+                    fecha=fecha,
+                    ruta_base=ruta_base,
+                )
+                procesados_exito += 1
+                juegos_desde_sync += 1
+
+                #sincronizar snapshot tar si se alcanza el intervalo
+                if sync_tar_dir is not None and juegos_desde_sync >= sync_interval:
+                    sincronizar_snapshot_tar(ruta_bronce_local, sync_tar_dir, worker_id=worker_id)
+                    juegos_desde_sync = 0
+            except Exception as exc:
+                fallidos += 1
+                errores.append({"appid": appid, "error": str(exc)})
+
             barra.actualizar(
                 actual=i,
                 appid=appid,
                 exitosos=procesados_exito + ya_completados,
                 fallidos=fallidos,
+                forzar=(i == total_solicitados),
             )
-            continue
-
-        try:
-            extraer_juego(
-                client=cliente_activo,
-                checkpoint=cp_activo,
-                appid=appid,
-                fecha=fecha,
-                ruta_base=ruta_base,
-            )
-            procesados_exito += 1
-        except Exception as exc:
-            fallidos += 1
-            errores.append({"appid": appid, "error": str(exc)})
-
-        barra.actualizar(
-            actual=i,
-            appid=appid,
-            exitosos=procesados_exito + ya_completados,
-            fallidos=fallidos,
-            forzar=(i == total_solicitados),
-        )
-
-    barra.cerrar()
+    finally:
+        barra.cerrar()
+        #sincronizacion final atómica al concluir o interrumpir
+        if sync_tar_dir is not None:
+            try:
+                sincronizar_snapshot_tar(ruta_bronce_local, sync_tar_dir, worker_id=worker_id)
+            except Exception:
+                pass
 
     return {
         "total_solicitados": total_solicitados,
@@ -288,4 +431,5 @@ def ejecutar_ingesta_masiva(
         "fallidos": fallidos,
         "errores": errores,
     }
+
 

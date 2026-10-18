@@ -246,3 +246,89 @@ def test_cli_main_modo_masivo_exitoso(tmp_path: Path) -> None:
         client=mock_client,
     )
     assert codigo == 0
+
+
+def test_cli_parser_argumentos_sharding() -> None:
+    #el parser cli debe aceptar opciones de manifiesto maestro y particionamiento distribuido
+    parser = _construir_parser()
+    args = parser.parse_args([
+        "--congelar-manifiesto",
+        "--min-appid", "2500000",
+        "--manifiesto-maestro", "ruta/manifest.json",
+        "--worker-id", "1",
+        "--total-workers", "2",
+        "--sync-tar-dir", "drive/sync",
+        "--sync-interval", "100",
+    ])
+    assert args.congelar_manifiesto is True
+    assert args.min_appid == 2500000
+    assert args.manifiesto_maestro == Path("ruta/manifest.json")
+    assert args.worker_id == 1
+    assert args.total_workers == 2
+    assert args.sync_tar_dir == Path("drive/sync")
+    assert args.sync_interval == 100
+
+
+def test_ejecutar_pipeline_congelar_manifiesto(tmp_path: Path) -> None:
+    #congelar manifiesto via pipeline debe generar manifest_master y retornar sin procesar plata
+    apps = [
+        {"appid": 2400010, "name": "Modern 1"},
+        {"appid": 2400020, "name": "Modern 2"},
+    ]
+    mock_client = MagicMock(spec=SteamClient)
+    mock_client.iterar_catalogo_completo.return_value = iter(apps)
+
+    res = ejecutar_pipeline(
+        ruta_base=tmp_path,
+        client=mock_client,
+        fecha="2026-10-18",
+        congelar_manifiesto=True,
+        min_appid=2400000,
+    )
+
+    assert res["estado"] == "ok"
+    assert "manifest_master.json" in res["manifiesto_maestro"]
+    assert res["extraccion"] is None
+    assert Path(res["manifiesto_maestro"]).is_file()
+
+
+def test_ejecutar_pipeline_manifiesto_maestro_sharding(tmp_path: Path) -> None:
+    #ejecutar pipeline con manifiesto maestro asigna unicamente el shard modular al worker
+    apps = [
+        {"appid": 2400010, "name": "Modern 1"},
+        {"appid": 2400020, "name": "Modern 2"},
+        {"appid": 2400030, "name": "Modern 3"},
+        {"appid": 2400040, "name": "Modern 4"},
+    ]
+    mock_client = MagicMock(spec=SteamClient)
+    mock_client.iterar_catalogo_completo.return_value = iter(apps)
+    mock_client.get_app_details.side_effect = lambda aid: _crear_payload_appdetails(aid, f"Modern {aid}")
+    mock_client.get_app_reviews_summary.side_effect = lambda aid: _crear_payload_reviews(aid)
+    mock_client.base_url_store = "https://store.steampowered.com/api"
+    mock_client.country_code = "US"
+    mock_client.language = "english"
+
+    res_man = ejecutar_pipeline(
+        ruta_base=tmp_path,
+        client=mock_client,
+        fecha="2026-10-18",
+        congelar_manifiesto=True,
+        min_appid=2400000,
+    )
+    ruta_manifest = Path(res_man["manifiesto_maestro"])
+
+    #worker 1 de 2: debe procesar indices impares [2400020, 2400040] (2 juegos)
+    res_worker = ejecutar_pipeline(
+        ruta_base=tmp_path,
+        client=mock_client,
+        fecha="2026-10-18",
+        modo="masivo",
+        manifiesto_maestro=ruta_manifest,
+        worker_id=1,
+        total_workers=2,
+    )
+
+    assert res_worker["estado"] == "ok"
+    assert res_worker["extraccion"]["total_solicitados"] == 2
+    assert res_worker["extraccion"]["procesados_exito"] == 2
+

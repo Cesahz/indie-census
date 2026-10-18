@@ -11,9 +11,12 @@ import pyarrow as pa
 
 from src.extract.client import SteamClient
 from src.extract.pipeline import (
+    cargar_manifest_master,
+    congelar_manifiesto_maestro,
     descubrir_catalogo_steam,
     ejecutar_extraccion_muestra,
     ejecutar_ingesta_masiva,
+    particionar_appids_por_modulo,
 )
 from src.quality.contratos import CARDINALIDAD_MUESTRA, ContratoCalidadError, validar_contratos_plata
 from src.transform.oro import ejecutar_transformacion_oro
@@ -39,6 +42,13 @@ def ejecutar_pipeline(
     max_juegos: Optional[int] = None,
     descubrir: bool = False,
     mostrar_progreso: bool = True,
+    congelar_manifiesto: bool = False,
+    min_appid: int = 2400000,
+    manifiesto_maestro: Optional[Path] = None,
+    worker_id: int = 0,
+    total_workers: int = 1,
+    sync_tar_dir: Optional[Path] = None,
+    sync_interval: int = 250,
 ) -> dict[str, Any]:
     """Ejecutar el pipeline completo de forma reproducible.
     Entradas:
@@ -65,10 +75,35 @@ def ejecutar_pipeline(
 
     #1. extraccion idempotente hacia bronce
     metricas_extraccion: Optional[dict[str, Any]] = None
+    if congelar_manifiesto:
+        cliente_steam = client or SteamClient()
+        ruta_m = congelar_manifiesto_maestro(
+            client=cliente_steam,
+            min_appid=min_appid,
+            max_juegos=max_juegos,
+            fecha=fecha,
+            ruta_base=base,
+        )
+        return {
+            "estado": "ok",
+            "pipeline_version": PIPELINE_VERSION,
+            "manifiesto_maestro": str(ruta_m),
+            "extraccion": None,
+            "plata": None,
+            "oro": None,
+        }
+
     if not omitir_extraccion:
         if modo == "masivo":
-            appids_descubiertos: list[int] = []
-            if descubrir:
+            appids_objetivo: list[int] = []
+            if manifiesto_maestro is not None:
+                appids_maestros = cargar_manifest_master(Path(manifiesto_maestro))
+                appids_objetivo = particionar_appids_por_modulo(
+                    appids=appids_maestros,
+                    worker_id=worker_id,
+                    total_workers=total_workers,
+                )
+            elif descubrir:
                 cliente_steam = client or SteamClient()
                 appids_descubiertos = descubrir_catalogo_steam(
                     client=cliente_steam,
@@ -76,13 +111,26 @@ def ejecutar_pipeline(
                     fecha=fecha,
                     ruta_base=base,
                 )
+                if total_workers > 1:
+                    appids_objetivo = particionar_appids_por_modulo(
+                        appids=appids_descubiertos,
+                        worker_id=worker_id,
+                        total_workers=total_workers,
+                    )
+                else:
+                    appids_objetivo = appids_descubiertos
+
             metricas_extraccion = ejecutar_ingesta_masiva(
-                appids=appids_descubiertos,
+                appids=appids_objetivo,
                 client=client,
                 checkpoint=None,
                 fecha=fecha,
                 ruta_base=base,
                 mostrar_progreso=mostrar_progreso,
+                worker_id=worker_id,
+                total_workers=total_workers,
+                sync_tar_dir=Path(sync_tar_dir) if sync_tar_dir is not None else None,
+                sync_interval=sync_interval,
             )
         else:
             metricas_extraccion = ejecutar_extraccion_muestra(
@@ -154,6 +202,34 @@ def _construir_parser() -> argparse.ArgumentParser:
         help="Limite maximo de juegos a descubrir/extraer en modo masivo.",
     )
     parser.add_argument(
+        "--congelar-manifiesto", action="store_true",
+        help="Congelar lista maestra inmutable en data/bronce/steam/<fecha>/applist/manifest_master.json.",
+    )
+    parser.add_argument(
+        "--min-appid", type=int, default=2400000,
+        help="AppID minimo para acotar universo objetivo (por defecto 2400000 para cohorte 2024-2026).",
+    )
+    parser.add_argument(
+        "--manifiesto-maestro", type=Path, default=None,
+        help="Ruta al archivo manifest_master.json para ingesta distribuida con particionamiento modular.",
+    )
+    parser.add_argument(
+        "--worker-id", type=int, default=0,
+        help="Identificador del worker actual (0-indexed).",
+    )
+    parser.add_argument(
+        "--total-workers", type=int, default=1,
+        help="Numero total de workers coordinados por particionamiento modular.",
+    )
+    parser.add_argument(
+        "--sync-tar-dir", type=Path, default=None,
+        help="Directorio destino para empaquetado y sincronizacion snapshot tar.gz.",
+    )
+    parser.add_argument(
+        "--sync-interval", type=int, default=250,
+        help="Frecuencia de juegos procesados antes de sincronizar snapshot tar.gz.",
+    )
+    parser.add_argument(
         "--sin-progreso", action="store_true",
         help="Desactivar barra de progreso visual en consola.",
     )
@@ -176,10 +252,21 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
             max_juegos=args.max_juegos,
             descubrir=args.descubrir,
             mostrar_progreso=not args.sin_progreso,
+            congelar_manifiesto=args.congelar_manifiesto,
+            min_appid=args.min_appid,
+            manifiesto_maestro=args.manifiesto_maestro,
+            worker_id=args.worker_id,
+            total_workers=args.total_workers,
+            sync_tar_dir=args.sync_tar_dir,
+            sync_interval=args.sync_interval,
         )
     except ContratoCalidadError as exc:
         print(f"Pipeline bloqueado por contrato de calidad: {exc}", file=sys.stderr)
         return 1
+
+    if resultado.get("manifiesto_maestro"):
+        print(f"Manifiesto maestro congelado con exito: {resultado['manifiesto_maestro']}")
+        return 0
 
     extraccion = resultado["extraccion"]
     plata = resultado["plata"]
