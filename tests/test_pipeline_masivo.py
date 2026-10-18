@@ -137,6 +137,46 @@ def test_construir_tablas_plata_modo_masivo_descarta_juegos_sin_fecha(tmp_path: 
     assert resumen.to_pydict()["game_id"] == [701]
 
 
+def test_construir_tablas_plata_modo_masivo_descarta_juegos_de_pago_sin_precio(tmp_path: Path) -> None:
+    #en modo masivo se descartan productos de pago que no tienen precio disponible (deslistados/bundle-only)
+    fecha = "2026-10-17"
+
+    #701 con precio valido
+    env_701 = crear_envoltorio_bronce(
+        fuente="steam.appdetails", url_solicitada="http://test/701", parametros={}, estado_http=200,
+        payload=_crear_payload_appdetails(701, "Indie Con Precio", price_cents=1999),
+    )
+    guardar_en_bronce("appdetails", fecha, 701, env_701, ruta_base=tmp_path)
+    guardar_en_bronce("appreviews_resumen", fecha, 701, crear_envoltorio_bronce(
+        fuente="steam.appreviews_resumen", url_solicitada="http://test/rev/701", parametros={}, estado_http=200,
+        payload=_crear_payload_reviews(701),
+    ), ruta_base=tmp_path)
+
+    #702 de pago pero deslistado / sin precio
+    payload_sin_precio = _crear_payload_appdetails(702, "Indie Sin Precio")
+    payload_sin_precio["702"]["data"]["price_overview"] = None
+    env_702 = crear_envoltorio_bronce(
+        fuente="steam.appdetails", url_solicitada="http://test/702", parametros={}, estado_http=200,
+        payload=payload_sin_precio,
+    )
+    guardar_en_bronce("appdetails", fecha, 702, env_702, ruta_base=tmp_path)
+    guardar_en_bronce("appreviews_resumen", fecha, 702, crear_envoltorio_bronce(
+        fuente="steam.appreviews_resumen", url_solicitada="http://test/rev/702", parametros={}, estado_http=200,
+        payload=_crear_payload_reviews(702),
+    ), ruta_base=tmp_path)
+
+    dim_game, resumen = construir_tablas_plata(
+        ruta_base=tmp_path,
+        fecha=fecha,
+        modo="masivo",
+    )
+
+    assert dim_game.num_rows == 1
+    assert resumen.num_rows == 1
+    assert dim_game.to_pydict()["game_id"] == [701]
+    assert resumen.to_pydict()["game_id"] == [701]
+
+
 def test_ejecutar_pipeline_modo_masivo_con_descubrimiento_e2e(tmp_path: Path) -> None:
     #flujo e2e masivo: descubrimiento -> ingesta bronce -> plata -> oro analitico
     apps_catalogo = [
