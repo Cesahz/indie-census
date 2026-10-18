@@ -49,6 +49,7 @@ def ejecutar_pipeline(
     total_workers: int = 1,
     sync_tar_dir: Optional[Path] = None,
     sync_interval: int = 250,
+    node_environment: Optional[str] = None,
 ) -> dict[str, Any]:
     """Ejecutar el pipeline completo de forma reproducible.
     Entradas:
@@ -131,6 +132,7 @@ def ejecutar_pipeline(
                 total_workers=total_workers,
                 sync_tar_dir=Path(sync_tar_dir) if sync_tar_dir is not None else None,
                 sync_interval=sync_interval,
+                node_environment=node_environment,
             )
         else:
             metricas_extraccion = ejecutar_extraccion_muestra(
@@ -230,6 +232,10 @@ def _construir_parser() -> argparse.ArgumentParser:
         help="Frecuencia de juegos procesados antes de sincronizar snapshot tar.gz.",
     )
     parser.add_argument(
+        "--node-env", default=None,
+        help="Nombre descriptivo del entorno de ejecucion (ej. PC Local o Google Colab Pro).",
+    )
+    parser.add_argument(
         "--sin-progreso", action="store_true",
         help="Desactivar barra de progreso visual en consola.",
     )
@@ -259,6 +265,7 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
             total_workers=args.total_workers,
             sync_tar_dir=args.sync_tar_dir,
             sync_interval=args.sync_interval,
+            node_environment=args.node_env,
         )
     except ContratoCalidadError as exc:
         print(f"Pipeline bloqueado por contrato de calidad: {exc}", file=sys.stderr)
@@ -271,6 +278,18 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
     extraccion = resultado["extraccion"]
     plata = resultado["plata"]
     oro = resultado.get("oro")
+
+    if extraccion and extraccion.get("exit_reason") == "sigint_interrupted":
+        print("\n[SIGINT] Interrupcion limpia capturada: checkpoints y telemetria volcados con exito.")
+        bm = extraccion.get("benchmark")
+        if bm:
+            print(
+                f"Telemetria [{bm['node_environment']}]: {bm['processed_appids']} appids procesados, "
+                f"{bm['throughput_apps_per_minute']} apps/min, {bm['rate_limit_hits_429']} hits 429, "
+                f"{bm['network_retry_count']} retries."
+            )
+        return 0
+
     print(f"Pipeline completado (version {resultado['pipeline_version']})")
     if extraccion is None:
         print("Extraccion: omitida")
@@ -280,6 +299,12 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
             f"Extraccion: {extraccion['procesados_exito']}/{total} juegos, "
             f"{extraccion['fallidos']} fallidos"
         )
+        bm = extraccion.get("benchmark")
+        if bm:
+            print(
+                f"Telemetria [{bm['node_environment']}]: {bm['throughput_apps_per_minute']} apps/min, "
+                f"{bm['rate_limit_hits_429']} hits 429, {bm['network_retry_count']} retries."
+            )
     print(f"Plata dim_game: {plata['filas_dim_game']} filas -> {plata['dim_game']}")
     print(
         f"Plata game_review_summary: {plata['filas_game_review_summary']} filas -> "

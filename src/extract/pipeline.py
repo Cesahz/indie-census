@@ -1,15 +1,17 @@
 #modulo orquestador de extraccion de la muestra de control
 #coordina cliente http resiliente, persistencia inmutable en bronce y gestor de checkpoint
 import json
+import signal
 import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 import yaml
 
+from src.extract.benchmark import ColectorTelemetria
 from src.extract.bronce import BronzeImmutabilityError, crear_envoltorio_bronce, guardar_en_bronce
 from src.extract.checkpoint import GestorCheckpoint
-from src.extract.client import SteamClient
+from src.extract.client import SteamAppNotFoundError, SteamClient
 from src.extract.progress import BarraProgreso
 
 #rutas canonicas por defecto del repositorio
@@ -341,8 +343,9 @@ def ejecutar_ingesta_masiva(
     total_workers: int = 1,
     sync_tar_dir: Optional[Path] = None,
     sync_interval: int = 250,
+    node_environment: Optional[str] = None,
 ) -> dict[str, Any]:
-    """Orquestar la ingesta secuencial masiva de appids con checkpoints e idempotencia."""
+    """Orquestar la ingesta secuencial masiva de appids con checkpoints, telemetria y graceful exit."""
     cliente_activo = client or SteamClient()
     base_dir = ruta_base or RUTA_DATA_DEFAULT
 
@@ -361,10 +364,33 @@ def ejecutar_ingesta_masiva(
     total_solicitados = len(appids)
     ya_completados = 0
     procesados_exito = 0
+    unavailable_or_dlc = 0
     fallidos = 0
     errores: list[dict[str, Any]] = []
     juegos_desde_sync = 0
     ruta_bronce_local = base_dir / "bronce"
+    ruta_bronce_particion = ruta_bronce_local / "steam" / fecha
+
+    interrupcion_solicitada = False
+
+    def _manejador_sigint(signum: Any, frame: Any) -> None:
+        nonlocal interrupcion_solicitada
+        interrupcion_solicitada = True
+
+    try:
+        signal.signal(signal.SIGINT, _manejador_sigint)
+    except (ValueError, AttributeError):
+        pass
+
+    colector = ColectorTelemetria(
+        worker_id=worker_id,
+        total_workers=total_workers,
+        node_environment=node_environment,
+        total_assigned_appids=total_solicitados,
+        ruta_bronce=ruta_bronce_particion,
+        fecha=fecha,
+        sync_tar_dir=sync_tar_dir,
+    )
 
     barra = BarraProgreso(
         total=total_solicitados,
@@ -372,14 +398,33 @@ def ejecutar_ingesta_masiva(
         habilitado=mostrar_progreso,
     )
 
+    exit_reason = "completed"
+
     try:
         for i, appid in enumerate(appids, start=1):
+            if interrupcion_solicitada:
+                exit_reason = "sigint_interrupted"
+                break
+
+            #verificar si ya estaba marcado como no disponible
+            if cp_activo.esta_completado("no_disponible", appid):
+                unavailable_or_dlc += 1
+                colector.registrar_no_disponible(appid)
+                barra.actualizar(
+                    actual=i,
+                    appid=appid,
+                    exitosos=procesados_exito + ya_completados,
+                    fallidos=fallidos,
+                )
+                continue
+
             #verificar si ambos recursos estan completados
             det_completado = cp_activo.esta_completado("appdetails", appid)
             rev_completado = cp_activo.esta_completado("appreviews_resumen", appid)
 
             if det_completado and rev_completado:
                 ya_completados += 1
+                colector.registrar_exito(appid)
                 barra.actualizar(
                     actual=i,
                     appid=appid,
@@ -398,11 +443,20 @@ def ejecutar_ingesta_masiva(
                 )
                 procesados_exito += 1
                 juegos_desde_sync += 1
+                colector.registrar_exito(appid)
 
                 #sincronizar snapshot tar si se alcanza el intervalo
                 if sync_tar_dir is not None and juegos_desde_sync >= sync_interval:
                     sincronizar_snapshot_tar(ruta_bronce_local, sync_tar_dir, worker_id=worker_id)
                     juegos_desde_sync = 0
+            except SteamAppNotFoundError as exc:
+                fallidos += 1
+                unavailable_or_dlc += 1
+                errores.append({"appid": appid, "error": str(exc)})
+                colector.registrar_no_disponible(appid)
+            except KeyboardInterrupt:
+                exit_reason = "sigint_interrupted"
+                break
             except Exception as exc:
                 fallidos += 1
                 errores.append({"appid": appid, "error": str(exc)})
@@ -414,12 +468,28 @@ def ejecutar_ingesta_masiva(
                 fallidos=fallidos,
                 forzar=(i == total_solicitados),
             )
+    except KeyboardInterrupt:
+        exit_reason = "sigint_interrupted"
     finally:
         barra.cerrar()
-        #sincronizacion final atómica al concluir o interrumpir
+        #persistir checkpoint de forma segura
+        try:
+            cp_activo.guardar()
+        except Exception:
+            pass
+
+        #sincronizar metricas acumuladas en el cliente
+        colector.sincronizar_contadores_cliente(cliente_activo)
+
+        #volcar reporte de telemetria en benchmarks/
+        reporte_bm = colector.finalizar(exit_reason=exit_reason)
+
+        #sincronizacion final atomica a tar.gz incluyendo el benchmark
         if sync_tar_dir is not None:
             try:
                 sincronizar_snapshot_tar(ruta_bronce_local, sync_tar_dir, worker_id=worker_id)
+                #actualizar peso comprimido en el reporte tras empaquetar
+                colector.finalizar(exit_reason=exit_reason)
             except Exception:
                 pass
 
@@ -428,8 +498,11 @@ def ejecutar_ingesta_masiva(
         "total_juegos": total_solicitados,
         "ya_completados": ya_completados,
         "procesados_exito": procesados_exito,
+        "unavailable_or_dlc": unavailable_or_dlc,
         "fallidos": fallidos,
         "errores": errores,
+        "exit_reason": exit_reason,
+        "benchmark": reporte_bm,
     }
 
 

@@ -53,6 +53,9 @@ class SteamClient:
         self.base_url_api = base_url_api.rstrip("/")
         self.country_code = country_code
         self.language = language
+        self.rate_limit_hits_429: int = 0
+        self.network_retry_count: int = 0
+        self.total_requests: int = 0
 
     @staticmethod
     def _resolver_api_key(ruta_env: Optional[Path] = None) -> Optional[str]:
@@ -100,9 +103,11 @@ class SteamClient:
         """Ejecutar peticion get con manejo de reintentos y 429."""
         intento = 0
         while True:
+            self.total_requests += 1
             try:
                 respuesta = self.session.get(url, timeout=30)
             except requests.exceptions.RequestException as exc:
+                self.network_retry_count += 1
                 raise SteamNetworkError(f"Fallo de red al conectar con steam: {exc}") from exc
 
             if respuesta.status_code == 200:
@@ -112,6 +117,8 @@ class SteamClient:
                     raise SteamServerError(f"Respuesta json no valida de steam: {exc}") from exc
 
             if respuesta.status_code == 429:
+                self.rate_limit_hits_429 += 1
+                self.network_retry_count += 1
                 if intento >= self.max_retries:
                     raise SteamRateLimitError(
                         "Tasa de peticiones excedida: limite 429 alcanzado tras reintentos"
