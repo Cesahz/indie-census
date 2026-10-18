@@ -6,13 +6,10 @@ import tarfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
-
 from src.extract.bronce import crear_envoltorio_bronce, guardar_en_bronce
 from src.extract.checkpoint import GestorCheckpoint
 from src.extract.client import SteamAppNotFoundError, SteamClient
 from src.quality.reconciliacion import (
-    ReconciliacionError,
     auditar_completitud_manifiesto,
     descomprimir_snapshot_worker,
     ejecutar_barrido_residual,
@@ -103,10 +100,10 @@ def test_auditar_completitud_manifiesto_100_por_ciento(tmp_path: Path) -> None:
     cp = GestorCheckpoint(ruta_archivo=tmp_path / "checkpoint.json")
     cp.marcar_completado("no_disponible", 103)
 
-    ruta_fecha = tmp_path / "bronce" / "steam" / fecha
     auditoria = auditar_completitud_manifiesto(
         ruta_manifiesto=ruta_man,
-        ruta_bronce_fecha=ruta_fecha,
+        ruta_base=tmp_path,
+        fecha=fecha,
         checkpoints=[cp],
     )
 
@@ -130,10 +127,10 @@ def test_auditar_completitud_manifiesto_detecta_huecos(tmp_path: Path) -> None:
     env_rev = crear_envoltorio_bronce("steam.appreviews_resumen", "http://test/r/201", {}, 200, _crear_payload_reviews(201))
     guardar_en_bronce("appreviews_resumen", fecha, 201, env_rev, ruta_base=tmp_path)
 
-    ruta_fecha = tmp_path / "bronce" / "steam" / fecha
     auditoria = auditar_completitud_manifiesto(
         ruta_manifiesto=ruta_man,
-        ruta_bronce_fecha=ruta_fecha,
+        ruta_base=tmp_path,
+        fecha=fecha,
     )
 
     assert auditoria["total_manifiesto"] == 3
@@ -148,19 +145,19 @@ def test_verificar_integridad_criptografica_sha256(tmp_path: Path) -> None:
     env_ok = crear_envoltorio_bronce("steam.appdetails", "http://test/301", {}, 200, _crear_payload_appdetails(301))
     guardar_en_bronce("appdetails", fecha, 301, env_ok, ruta_base=tmp_path)
 
-    ruta_fecha = tmp_path / "bronce" / "steam" / fecha
-    res_ok = verificar_integridad_criptografica(ruta_fecha)
+    ruta_bronce = tmp_path / "bronce"
+    res_ok = verificar_integridad_criptografica(ruta_bronce)
     assert res_ok["total_verificados"] >= 1
     assert res_ok["integros"] >= 1
     assert res_ok["corruptos"] == 0
 
     #alterar manualmente el payload para forzar discrepancia
-    archivo = ruta_fecha / "appdetails" / "301.json"
+    archivo = tmp_path / "bronce" / "steam" / "appdetails" / f"fecha={fecha}" / "appid=301.json"
     contenido = json.loads(archivo.read_text(encoding="utf-8"))
     contenido["payload"]["301"]["data"]["name"] = "Nombre Alterado Maliciosamente"
     archivo.write_text(json.dumps(contenido), encoding="utf-8")
 
-    res_corrupto = verificar_integridad_criptografica(ruta_fecha)
+    res_corrupto = verificar_integridad_criptografica(ruta_bronce)
     assert res_corrupto["corruptos"] == 1
     assert len(res_corrupto["archivos_corruptos"]) == 1
 
@@ -197,7 +194,7 @@ def test_ejecutar_barrido_residual(tmp_path: Path) -> None:
     assert res["no_disponibles"] == 1
     assert res["pendientes_finales"] == 0
     assert cp.esta_completado("no_disponible", 402)
-    assert (tmp_path / "bronce" / "steam" / fecha / "appdetails" / "401.json").is_file()
+    assert (tmp_path / "bronce" / "steam" / "appdetails" / f"fecha={fecha}" / "appid=401.json").is_file()
 
 
 def test_reconciliar_ingesta_distribuida_flujo_completo(tmp_path: Path) -> None:
