@@ -1,7 +1,6 @@
 #suite de pruebas unitarias para el renderizador de barra de progreso en consola
 #evalua calculo porcentual, formato de eta, tolerancia a codificacion cp1252 y flujo de cierre
 import io
-import time
 from unittest.mock import MagicMock
 
 from src.extract.client import SteamClient

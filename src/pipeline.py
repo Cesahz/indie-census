@@ -38,6 +38,7 @@ def ejecutar_pipeline(
     modo: str = "control",
     max_juegos: Optional[int] = None,
     descubrir: bool = False,
+    mostrar_progreso: bool = True,
 ) -> dict[str, Any]:
     """Ejecutar el pipeline completo de forma reproducible.
     Entradas:
@@ -81,6 +82,7 @@ def ejecutar_pipeline(
                 checkpoint=None,
                 fecha=fecha,
                 ruta_base=base,
+                mostrar_progreso=mostrar_progreso,
             )
         else:
             metricas_extraccion = ejecutar_extraccion_muestra(
@@ -151,6 +153,10 @@ def _construir_parser() -> argparse.ArgumentParser:
         "--max-juegos", type=int, default=None,
         help="Limite maximo de juegos a descubrir/extraer en modo masivo.",
     )
+    parser.add_argument(
+        "--sin-progreso", action="store_true",
+        help="Desactivar barra de progreso visual en consola.",
+    )
     return parser
 
 
@@ -169,6 +175,7 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
             modo=args.modo,
             max_juegos=args.max_juegos,
             descubrir=args.descubrir,
+            mostrar_progreso=not args.sin_progreso,
         )
     except ContratoCalidadError as exc:
         print(f"Pipeline bloqueado por contrato de calidad: {exc}", file=sys.stderr)

@@ -8,6 +8,7 @@ import yaml
 from src.extract.bronce import BronzeImmutabilityError, crear_envoltorio_bronce, guardar_en_bronce
 from src.extract.checkpoint import GestorCheckpoint
 from src.extract.client import SteamClient
+from src.extract.progress import BarraProgreso
 
 #rutas canonicas por defecto del repositorio
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -218,6 +219,8 @@ def ejecutar_ingesta_masiva(
     checkpoint: Optional[GestorCheckpoint] = None,
     fecha: Optional[str] = None,
     ruta_base: Optional[Path] = None,
+    mostrar_progreso: bool = True,
+    stream_progreso: Optional[Any] = None,
 ) -> dict[str, Any]:
     """Orquestar la ingesta secuencial masiva de appids con checkpoints e idempotencia."""
     cliente_activo = client or SteamClient()
@@ -233,13 +236,25 @@ def ejecutar_ingesta_masiva(
     fallidos = 0
     errores: list[dict[str, Any]] = []
 
-    for appid in appids:
+    barra = BarraProgreso(
+        total=total_solicitados,
+        stream=stream_progreso,
+        habilitado=mostrar_progreso,
+    )
+
+    for i, appid in enumerate(appids, start=1):
         #verificar si ambos recursos estan completados
         det_completado = cp_activo.esta_completado("appdetails", appid)
         rev_completado = cp_activo.esta_completado("appreviews_resumen", appid)
 
         if det_completado and rev_completado:
             ya_completados += 1
+            barra.actualizar(
+                actual=i,
+                appid=appid,
+                exitosos=procesados_exito + ya_completados,
+                fallidos=fallidos,
+            )
             continue
 
         try:
@@ -254,6 +269,16 @@ def ejecutar_ingesta_masiva(
         except Exception as exc:
             fallidos += 1
             errores.append({"appid": appid, "error": str(exc)})
+
+        barra.actualizar(
+            actual=i,
+            appid=appid,
+            exitosos=procesados_exito + ya_completados,
+            fallidos=fallidos,
+            forzar=(i == total_solicitados),
+        )
+
+    barra.cerrar()
 
     return {
         "total_solicitados": total_solicitados,
