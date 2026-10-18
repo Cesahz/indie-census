@@ -99,7 +99,6 @@ def test_construir_tablas_plata_modo_masivo(tmp_path: Path) -> None:
 
 def test_construir_tablas_plata_modo_masivo_descarta_juegos_sin_fecha(tmp_path: Path) -> None:
     #en modo masivo se descartan productos sin fecha de lanzamiento valida en steam
-    appids = [701, 702]
     fecha = "2026-10-17"
 
     #701 con fecha valida

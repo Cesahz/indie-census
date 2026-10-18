@@ -282,6 +282,10 @@ def construir_tablas_plata(
         )
         fila_dim["group"] = item.get("grupo")
 
+        #en modo masivo se descartan productos sin fecha de lanzamiento valida o sin titulo
+        if modo == "masivo" and (not fila_dim.get("release_date") or not fila_dim.get("title")):
+            continue
+
         desc_texto = fila_dim.pop("_desc_texto", "")
         descriptors = fila_dim.pop("_descriptors_steam", [])
 
