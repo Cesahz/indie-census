@@ -2,9 +2,23 @@
 
 ### agregado
 
-- expansion masiva de catalogo de steam con getapplist y control de supervivencia (fase 3)
-- ingesta particionada en capa bronce para cohortes 2024-2026 con checkpoints tolerantes a fallos
-- agregacion de resenas y derivacion de metricas comerciales boxleiter a escala
+- motor de modelado predictivo y auditoria de viabilidad comercial de videojuegos (fase 4)
+- calculo algoritmico de densidad competitiva en ventanas temporales de lanzamiento (fase 4)
+- deteccion de nichos comerciales desatendidos vs etiquetas de tienda saturadas (fase 4)
+- generador de reportes ejecutivos headless en formatos pdf y json desacoplado de interfaces web (fase 4)
+
+## [0.3.0] - 2026-10-18
+
+### agregado
+
+- extraccion masiva autenticada via istore service getapplist con paginacion perezosa (src/extract/client.py)
+- ingesta particionada en capa bronce para cohortes y catalogo completo con checkpoints idempotentes tolerantes a fallos (src/extract/pipeline.py)
+- barra visual de progreso en consola con calculo dinamico de eta y resiliencia de codificacion cp1252/ascii (src/extract/progress.py)
+- modelo analitico calibrado de ventas y recaudacion neta boxleiter multi-era con retencion neta (src/analysis/boxleiter.py)
+- enriquecimiento de capa oro fact_game_performance con ingresos netos e integracion star schema sqlite
+- orquestador masivo cli con soporte para descubrimiento, limites y contencion de contratos (src/pipeline.py)
+- lista de exclusion corporativa ampliada con valve y grandes multinacionales en taxonomia (config/taxonomy.yaml)
+- saneamiento de datos en capa plata para titulos sin fecha de lanzamiento o paquetes sin precio unitario (src/transform/plata.py)
 
 ## [0.2.0] - 2026-10-17
 
