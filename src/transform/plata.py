@@ -14,6 +14,7 @@ import yaml
 from src.classify.ai import clasificar_divulgacion_ia
 from src.classify.engine import clasificar_motor
 from src.classify.indie import calcular_indie_score
+from src.quality.contratos import FECHA_MAXIMA_CATALOGO, FECHA_MINIMA_CATALOGO
 from src.version import PIPELINE_VERSION
 
 #rutas canonicas por defecto del repositorio
@@ -282,9 +283,15 @@ def construir_tablas_plata(
         )
         fila_dim["group"] = item.get("grupo")
 
-        #en modo masivo se descartan productos sin fecha, sin titulo o de pago sin precio disponible
+        #en modo masivo se descartan productos sin fecha valida, fuera de catalogo, sin titulo o sin precio
         if modo == "masivo":
             if not fila_dim.get("release_date") or not fila_dim.get("title"):
+                continue
+            try:
+                f_obj = date.fromisoformat(str(fila_dim["release_date"]))
+                if not (FECHA_MINIMA_CATALOGO <= f_obj <= FECHA_MAXIMA_CATALOGO):
+                    continue
+            except (ValueError, TypeError):
                 continue
             if not fila_dim.get("is_free") and fila_dim.get("price_launch_usd_cents") is None:
                 continue
