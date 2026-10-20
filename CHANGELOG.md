@@ -8,6 +8,11 @@
 - publicacion del dataset abierto en parquet y csv con metodologia, diccionario y limitaciones (fase 4)
 - enriquecimiento de etiquetas comunitarias de tienda mediante dataset externo para clasificacion de motores nivel 2
 
+### corregido
+
+- capitalizacion formal de excepciones de validacion en pipeline y transformacion oro
+- saneamiento de exclusiones de herramientas en gitignore trasladadas a git info exclude
+
 ## [0.3.2] - 2026-10-20
 
 ### agregado
