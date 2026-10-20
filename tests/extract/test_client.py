@@ -430,12 +430,13 @@ def test_iterar_catalogo_completo_max_total_cero_detiene_inmediato() -> None:
     assert mock_session.get.call_count == 0
 
 
-def test_descubrir_api_key_desde_archivo_env(tmp_path: Path) -> None:
+def test_descubrir_api_key_desde_archivo_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     #prueba de lectura manual de .env cuando os.environ no contiene la clave
+    monkeypatch.delenv("STEAM_API_KEY", raising=False)
     archivo_env = tmp_path / ".env"
     archivo_env.write_text("STEAM_API_KEY=CLAVE_DESDE_ARCHIVO\n", encoding="utf-8")
 
-    clave = SteamClient._descubrir_api_key(ruta_env=archivo_env)
+    clave = SteamClient._resolver_api_key(ruta_env=archivo_env)
     assert clave == "CLAVE_DESDE_ARCHIVO"
 
 

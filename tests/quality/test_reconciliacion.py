@@ -2,9 +2,11 @@
 #garantias: verificacion exhaustiva contra manifest_master, barrido residual y validacion sha-256
 import hashlib
 import json
-import tarfile
 from pathlib import Path
+import tarfile
 from unittest.mock import MagicMock
+
+import pytest
 
 from src.extract.bronce import crear_envoltorio_bronce, guardar_en_bronce
 from src.extract.checkpoint import GestorCheckpoint
@@ -262,7 +264,7 @@ def test_reconciliar_ingesta_distribuida_falla_si_hay_huecos_sin_barrido(tmp_pat
     ruta_man = tmp_path / "bronce" / "steam" / fecha / "applist" / "manifest_master.json"
     _crear_manifiesto_maestro(ruta_man, appids, fecha=fecha)
 
-    with pytest.raises(ReconciliacionError, match="Reconciliacion fallida"):
+    with pytest.raises(ReconciliacionError, match="Fallo en Contrato 10 de Reconciliacion"):
         reconciliar_ingesta_distribuida(
             ruta_manifiesto=ruta_man,
             fecha=fecha,
@@ -273,7 +275,7 @@ def test_reconciliar_ingesta_distribuida_falla_si_hay_huecos_sin_barrido(tmp_pat
 
 
 def test_ejecutar_barrido_residual_con_app_no_encontrada(tmp_path: Path) -> None:
-    #juego que devuelve SteamAppNotFoundError debe registrarse en checkpoint como fallido
+    #juego que devuelve SteamAppNotFoundError debe registrarse en checkpoint como no disponible
     fecha = "2026-10-18"
     mock_client = MagicMock(spec=SteamClient)
     mock_client.get_app_details.side_effect = SteamAppNotFoundError("No disponible")
@@ -290,5 +292,5 @@ def test_ejecutar_barrido_residual_con_app_no_encontrada(tmp_path: Path) -> None
         checkpoint=cp,
     )
 
-    assert res["fallidos"] == 1
-    assert 9999 in cp.obtener_fallidos()
+    assert res["no_disponibles"] == 1
+    assert 9999 in cp.obtener_completados("no_disponible")

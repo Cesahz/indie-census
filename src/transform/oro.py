@@ -386,9 +386,9 @@ def ejecutar_transformacion_oro(
         archivo_rev = ruta_plata / "steam" / ARCHIVO_GAME_REVIEW_SUMMARY
 
     if not archivo_dim.is_file():
-        raise FileNotFoundError(f"archivo no encontrado en capa plata: {archivo_dim}")
+        raise FileNotFoundError(f"Archivo no encontrado en capa plata: {archivo_dim}")
     if not archivo_rev.is_file():
-        raise FileNotFoundError(f"archivo no encontrado en capa plata: {archivo_rev}")
+        raise FileNotFoundError(f"Archivo no encontrado en capa plata: {archivo_rev}")
 
     tabla_dim_plata = pq.read_table(archivo_dim)
     tabla_reviews_plata = pq.read_table(archivo_rev)

@@ -1,5 +1,5 @@
 #modulo de analisis comparativo de telemetria y benchmarking de nodos
-#cruza snapshots de ejecucion entre PC Local y Google Colab Pro para analisis de ingenieria
+#cruza snapshots de ejecucion entre pc local y google colab pro para analisis de ingenieria
 from datetime import datetime, timezone
 import json
 from pathlib import Path

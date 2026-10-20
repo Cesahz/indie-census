@@ -301,9 +301,9 @@ def particionar_appids_por_modulo(
 ) -> list[int]:
     """Filtrar lista de appids mediante congruencia modular asegurando cero huecos y cero solapamiento."""
     if total_workers < 1:
-        raise ValueError(f"total_workers debe ser >= 1, se recibio {total_workers}")
+        raise ValueError(f"Total_workers debe ser >= 1, se recibio {total_workers}")
     if not (0 <= worker_id < total_workers):
-        raise ValueError(f"worker_id debe estar en [0..{total_workers-1}], se recibio {worker_id}")
+        raise ValueError(f"Worker_id debe estar en [0..{total_workers-1}], se recibio {worker_id}")
 
     if total_workers == 1:
         return list(appids)
