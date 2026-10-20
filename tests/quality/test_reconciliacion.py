@@ -245,3 +245,50 @@ def test_reconciliar_ingesta_distribuida_flujo_completo(tmp_path: Path) -> None:
     #verificar persistencia de reporte en auditorias/
     ruta_auditoria = tmp_path / "bronce" / "steam" / fecha / "auditorias" / "reconciliacion_cero_huecos.json"
     assert ruta_auditoria.is_file()
+
+
+def test_descomprimir_snapshot_archivo_no_encontrado(tmp_path: Path) -> None:
+    #snapshot inexistente debe lanzar FileNotFoundError
+    with pytest.raises(FileNotFoundError, match="Snapshot tar no encontrado"):
+        descomprimir_snapshot_worker(tmp_path / "inexistente.tar.gz", tmp_path / "destino")
+
+
+def test_reconciliar_ingesta_distribuida_falla_si_hay_huecos_sin_barrido(tmp_path: Path) -> None:
+    #si hay huecos y no se permite barrido, debe lanzar ReconciliacionError
+    from src.quality.reconciliacion import ReconciliacionError
+
+    fecha = "2026-10-18"
+    appids = [901, 902]
+    ruta_man = tmp_path / "bronce" / "steam" / fecha / "applist" / "manifest_master.json"
+    _crear_manifiesto_maestro(ruta_man, appids, fecha=fecha)
+
+    with pytest.raises(ReconciliacionError, match="Reconciliacion fallida"):
+        reconciliar_ingesta_distribuida(
+            ruta_manifiesto=ruta_man,
+            fecha=fecha,
+            ruta_base=tmp_path,
+            rutas_snapshots=[],
+            permitir_barrido=False,
+        )
+
+
+def test_ejecutar_barrido_residual_con_app_no_encontrada(tmp_path: Path) -> None:
+    #juego que devuelve SteamAppNotFoundError debe registrarse en checkpoint como fallido
+    fecha = "2026-10-18"
+    mock_client = MagicMock(spec=SteamClient)
+    mock_client.get_app_details.side_effect = SteamAppNotFoundError("No disponible")
+    mock_client.base_url_store = "https://store.steampowered.com/api"
+    mock_client.country_code = "US"
+    mock_client.language = "english"
+
+    cp = GestorCheckpoint(ruta_archivo=tmp_path / "cp.json")
+    res = ejecutar_barrido_residual(
+        appids_pendientes=[9999],
+        client=mock_client,
+        fecha=fecha,
+        ruta_base=tmp_path,
+        checkpoint=cp,
+    )
+
+    assert res["fallidos"] == 1
+    assert 9999 in cp.obtener_fallidos()

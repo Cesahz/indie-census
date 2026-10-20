@@ -410,3 +410,32 @@ def test_iterar_catalogo_completo_limite_max_total() -> None:
     assert mock_session.get.call_count == 1
 
 
+def test_iterar_catalogo_completo_respuesta_vacia_detiene_bucle() -> None:
+    #si steam devuelve lista apps vacia, el generador finaliza
+    pagina_vacia = {"response": {"apps": [], "have_more_results": False}}
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.return_value = DummyResponse(status_code=200, json_data=pagina_vacia)
+
+    cliente = SteamClient(api_key="TEST", session=mock_session)
+    juegos = list(cliente.iterar_catalogo_completo(batch_size=10))
+    assert juegos == []
+
+
+def test_iterar_catalogo_completo_max_total_cero_detiene_inmediato() -> None:
+    #si max_total es 0, no debe realizar peticiones y devolver generador vacio
+    mock_session = MagicMock(spec=requests.Session)
+    cliente = SteamClient(api_key="TEST", session=mock_session)
+    juegos = list(cliente.iterar_catalogo_completo(max_total=0))
+    assert juegos == []
+    assert mock_session.get.call_count == 0
+
+
+def test_descubrir_api_key_desde_archivo_env(tmp_path: Path) -> None:
+    #prueba de lectura manual de .env cuando os.environ no contiene la clave
+    archivo_env = tmp_path / ".env"
+    archivo_env.write_text("STEAM_API_KEY=CLAVE_DESDE_ARCHIVO\n", encoding="utf-8")
+
+    clave = SteamClient._descubrir_api_key(ruta_env=archivo_env)
+    assert clave == "CLAVE_DESDE_ARCHIVO"
+
+

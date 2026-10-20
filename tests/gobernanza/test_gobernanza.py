@@ -19,13 +19,16 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # ---------------------------------------------------------------------------
 
 DIRECTORIOS_CANONICOS = [
+    "benchmarks",
     "config",
     "src",
+    "src/analysis",
     "src/extract",
     "src/transform",
     "src/classify",
     "src/quality",
     "tests",
+    "tests/analysis",
     "tests/gobernanza",
     "tests/extract",
     "tests/transform",
@@ -41,6 +44,7 @@ DIRECTORIOS_CANONICOS = [
 ARCHIVOS_CANONICOS = [
     "CHANGELOG.md",
     "README.md",
+    "README.es.md",
     "LICENSE",
     "requirements.txt",
     ".gitignore",
@@ -84,7 +88,7 @@ def test_f0_01_gitkeep_canonico_existe(relpath: str) -> None:
 # ---------------------------------------------------------------------------
 
 def _git_ls_files(*rutas: str) -> list[str]:
-    """ejecutar git ls-files y devolver la lista de rutas rastreadas."""
+    """Ejecutar git ls-files y devolver la lista de rutas rastreadas."""
     resultado = subprocess.run(
         ["git", "ls-files", "--", *rutas],
         cwd=REPO_ROOT,
@@ -96,7 +100,7 @@ def _git_ls_files(*rutas: str) -> list[str]:
 
 
 def _git_check_ignore(ruta_relativa: str) -> bool:
-    """devolver true si git trata la ruta como ignorada."""
+    """Devolver true si git trata la ruta como ignorada."""
     resultado = subprocess.run(
         ["git", "check-ignore", "-q", ruta_relativa],
         cwd=REPO_ROOT,
@@ -210,7 +214,7 @@ def test_f0_04_commit_invalido_rechaza(mensaje: str) -> None:
 # ---------------------------------------------------------------------------
 
 class TaxonomySchema(BaseModel):
-    """esquema minimo para taxonomy.yaml; todos los campos son opcionales en fase 0."""
+    """Esquema minimo para taxonomy.yaml; todos los campos son opcionales en fase 0."""
 
     motores: Optional[Any] = None
     generos: Optional[Any] = None
@@ -219,7 +223,7 @@ class TaxonomySchema(BaseModel):
 
 
 class MilestoneEntry(BaseModel):
-    """entrada individual de hito; todos los campos opcionales en fase 0."""
+    """Entrada individual de hito; todos los campos opcionales en fase 0."""
 
     fecha: Optional[str] = None
     tipo: Optional[str] = None
@@ -228,13 +232,13 @@ class MilestoneEntry(BaseModel):
 
 
 class MilestonesSchema(BaseModel):
-    """esquema de milestones.yaml; lista de hitos o ninguno en fase 0."""
+    """Esquema de milestones.yaml; lista de hitos o ninguno en fase 0."""
 
     hitos: Optional[list[MilestoneEntry]] = None
 
 
 class MuestraEntrada(BaseModel):
-    """entrada individual del manifiesto de muestra."""
+    """Entrada individual del manifiesto de muestra."""
 
     appid: Optional[int] = None
     grupo: Optional[str] = None
@@ -243,14 +247,14 @@ class MuestraEntrada(BaseModel):
 
 
 class MuestraControlSchema(BaseModel):
-    """esquema de muestra_control.yaml; lista de juegos o ninguno en fase 0."""
+    """Esquema de muestra_control.yaml; lista de juegos o ninguno en fase 0."""
 
     juegos: Optional[list[MuestraEntrada]] = None
     sha256_manifiesto: Optional[str] = None
 
 
 def _cargar_yaml(nombre_archivo: str) -> Any:
-    """cargar archivo yaml y devolver su contenido parseado (none si vacio)."""
+    """Cargar archivo yaml y devolver su contenido parseado (none si vacio)."""
     ruta = REPO_ROOT / "config" / nombre_archivo
     with ruta.open(encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -439,7 +443,7 @@ def test_f0_07_changelog_no_vacio_bajo_sin_publicar() -> None:
 # ---------------------------------------------------------------------------
 
 def _extraer_version_py() -> str:
-    """leer la version definida en src/version.py."""
+    """Leer la version definida en src/version.py."""
     ruta = REPO_ROOT / "src" / "version.py"
     assert ruta.is_file(), "src/version.py no existe"
     contenido = ruta.read_text(encoding="utf-8")
@@ -450,7 +454,7 @@ def _extraer_version_py() -> str:
 
 
 def _extraer_ultima_version_changelog() -> Optional[str]:
-    """devolver la ultima version publicada de changelog.md o none si solo hay [sin publicar]."""
+    """Devolver la ultima version publicada de changelog.md o none si solo hay [sin publicar]."""
     lineas = _leer_changelog()
     for linea in lineas:
         stripped = linea.strip()
@@ -478,7 +482,7 @@ def test_f0_08_version_py_existe_y_define_constante() -> None:
 
 
 def test_f0_08_coherencia_version_y_changelog() -> None:
-    """verificar coherencia entre version.py y changelog.md.
+    """Verificar coherencia entre version.py y changelog.md.
 
     reglas:
     - si changelog solo tiene [sin publicar], version.py debe ser 0.0.0
@@ -502,7 +506,7 @@ def test_f0_08_coherencia_version_y_changelog() -> None:
 
 
 def test_f0_08_changelog_tiene_entrada_para_version_actual() -> None:
-    """si version.py no es 0.0.0, debe existir una entrada en changelog.md."""
+    """Si version.py no es 0.0.0, debe existir una entrada en changelog.md."""
     version_py = _extraer_version_py()
     if version_py == "0.0.0":
         pytest.skip("version 0.0.0 no requiere entrada en changelog (estado inicial)")

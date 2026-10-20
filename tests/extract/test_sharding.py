@@ -51,13 +51,13 @@ def test_particionar_appids_validaciones_error() -> None:
     """Verificar que argumentos invalidos de worker_id y total_workers levantan ValueError."""
     appids = [10, 20, 30]
 
-    with pytest.raises(ValueError, match="total_workers debe ser >= 1"):
+    with pytest.raises(ValueError, match="Total_workers debe ser >= 1"):
         particionar_appids_por_modulo(appids, worker_id=0, total_workers=0)
 
-    with pytest.raises(ValueError, match="worker_id debe estar en"):
+    with pytest.raises(ValueError, match="Worker_id debe estar en"):
         particionar_appids_por_modulo(appids, worker_id=2, total_workers=2)
 
-    with pytest.raises(ValueError, match="worker_id debe estar en"):
+    with pytest.raises(ValueError, match="Worker_id debe estar en"):
         particionar_appids_por_modulo(appids, worker_id=-1, total_workers=2)
 
 
