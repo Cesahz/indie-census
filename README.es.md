@@ -2,6 +2,13 @@
 
 [Read in English](README.md) · [Leer en español](README.es.md)
 
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![Tests](https://img.shields.io/badge/tests-376%20passed-brightgreen.svg)
+![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen.svg)
+![Architecture](https://img.shields.io/badge/architecture-Data%20Lakehouse-orange.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)
+
 Observatorio abierto de datos del ecosistema de desarrollo de videojuegos independiente.
 
 ---
@@ -56,6 +63,7 @@ La plataforma implementa una arquitectura Data Lakehouse de tres capas (Bronce, 
 - **Hermeticidad total:** Pruebas unitarias y de integración que no tocan la red real; inyección de dependencias para reloj, pausas y generadores aleatorios.
 - **Inmutabilidad y trazabilidad:** Los datos crudos jamás se sobreescriben; cualquier recomputación parte de la fuente original histórica.
 - **Diseño sin costo:** Ejecución automatizada aprovechando infraestructura ligera y reproducible sin servidores dedicados de pago.
+- **Ingesta distribuida multi-nodo:** Sharding modular determinista (`idx % total_workers == worker_id`) con aceleración de 2.21x en nodos en la nube y recolección de más de 101.000 títulos crudos a costo cero de infraestructura de servidores (consúltese la [evaluación de rendimiento distribuido](benchmarks/comparativa_nodos_pc_vs_colab.md)).
 - **Eficiencia de ingesta:** Optimización de cuotas y rendimiento mediante endpoints autenticados por lotes (reducción del 99.4% en tiempo de catalogación y aceleración de 188x frente a endpoints anónimos; consúltese la [evaluación técnica de rendimiento](benchmarks/steam_api_throughput.md)).
 
 ---

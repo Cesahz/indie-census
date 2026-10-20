@@ -2,6 +2,13 @@
 
 [Read in English](README.md) · [Leer en español](README.es.md)
 
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![Tests](https://img.shields.io/badge/tests-376%20passed-brightgreen.svg)
+![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen.svg)
+![Architecture](https://img.shields.io/badge/architecture-Data%20Lakehouse-orange.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)
+
 Open data observatory of the independent game development ecosystem.
 
 ---
@@ -56,7 +63,8 @@ The platform follows a three-tier Data Lakehouse architecture (Bronze, Silver, G
 - **Hermetic Testing:** Unit and integration tests never touch live networks; dependencies like clocks, sleep intervals, and random seeds are injected.
 - **Immutability and Traceability:** Raw data is never overwritten; recomputations always branch from historical source truth.
 - **Zero-Cost Design:** Fully automated and reproducible on lightweight infrastructure without recurring cloud server costs.
-- **Ingestion Efficiency:** Quota and throughput optimization via batch authenticated endpoints (99.4% reduction in cataloging time and 188x acceleration over anonymous endpoints; see the [technical benchmark report](benchmarks/steam_api_throughput.md)).
+- **Distributed Multi-Node Ingestion:** Deterministic modular sharding (`idx % total_workers == worker_id`) achieving a 2.21x acceleration on cloud nodes and harvesting over 101,000 raw titles with zero server costs (see the [distributed extraction benchmark report](benchmarks/comparativa_nodos_pc_vs_colab.md)).
+- **Ingestion Efficiency:** Quota and throughput optimization via batch authenticated endpoints (99.4% reduction in cataloging time and 188x acceleration over anonymous endpoints; see the [technical throughput benchmark](benchmarks/steam_api_throughput.md)).
 
 ---
 
