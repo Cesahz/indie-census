@@ -2,10 +2,34 @@
 
 ### agregado
 
-- motor de modelado predictivo y auditoria de viabilidad comercial de videojuegos (fase 4)
-- calculo algoritmico de densidad competitiva en ventanas temporales de lanzamiento (fase 4)
-- deteccion de nichos comerciales desatendidos vs etiquetas de tienda saturadas (fase 4)
-- generador de reportes ejecutivos headless en formatos pdf y json desacoplado de interfaces web (fase 4)
+- capa oro analitica agregada con tablas maestras de penetracion de motores y saturacion relativa (fase 4)
+- pipeline programado en integracion continua con monitoreo de cuotas y alertas (fase 4)
+- contratos estadisticos de calidad y deteccion de deriva de esquema en capa oro (fase 4)
+- publicacion del dataset abierto en parquet y csv con metodologia, diccionario y limitaciones (fase 4)
+- enriquecimiento de etiquetas comunitarias de tienda mediante dataset externo para clasificacion de motores nivel 2
+
+## [0.3.2] - 2026-10-20
+
+### agregado
+
+- reconciliador cero-huecos y unificador atomico de snapshots distribuidos en capa bronce (src/quality/reconciliacion.py)
+- auditoria automatizada de completitud contra manifest_master y barrido residual tolerante a fallos
+- contrato 10 bloqueante de reconciliacion y verificacion criptografica sha-256 de integridad pre-plata
+- modulo de consolidacion y analisis comparativo de telemetria entre nodos pc local y google colab (src/analysis/comparativa_benchmark.py)
+
+### corregido
+
+- descarte en modo masivo para juegos con fechas de lanzamiento fuera de la ventana de catalogo 1997-2030 (src/transform/plata.py)
+
+## [0.3.1] - 2026-10-19
+
+### agregado
+
+- sharding distribuido multi-nodo con particionamiento modular por appid (src/extract/pipeline.py)
+- congelacion inmutable de manifiesto maestro para cohorte moderna (manifest_master.json)
+- empaquetado atomico periodico a snapshot tar.gz para sincronizacion en la nube (src/extract/pipeline.py)
+- colector de telemetria y benchmark por nodo con medicion de throughput, reintentos y 429 (src/extract/benchmark.py)
+- captura limpia de sigint e interrupciones manuales con volcado persistente de checkpoints y telemetria
 
 ## [0.3.0] - 2026-10-18
 
