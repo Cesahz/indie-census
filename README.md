@@ -6,7 +6,7 @@ Open data observatory of the independent game development ecosystem.
 
 ---
 
-> **Project Status:** Under active development (`v0.3.0`). This is a personal project being built steadily and methodically, prioritizing software engineering robustness and analytical rigor over speed. Every module is built following Test-Driven Development (TDD), with hermetic test suites (no external network calls or uncontrolled randomness), strict typing, and immutable data contracts defined before implementation.
+> **Project Status:** Under active development (`v0.3.2`). This is a personal project being built steadily and methodically, prioritizing software engineering robustness and analytical rigor over speed. Every module is built following Test-Driven Development (TDD), with hermetic test suites (no external network calls or uncontrolled randomness), strict typing, and immutable data contracts defined before implementation.
 
 ---
 
@@ -41,8 +41,12 @@ The platform follows a three-tier Data Lakehouse architecture (Bronze, Silver, G
 - **Phase 0 — Repository Governance & CI (`v0.0.0`):** Canonical directory hierarchy, strict `.gitignore` isolation, conventional commits pattern, and automated governance test suite.
 - **Phase 1 — MVP Vertical Slice (`v0.1.0`):** Resilient HTTP client with backoff and 429 quota management, fault-tolerant checkpoint manager, and calibrated 100-game control sample locked via SHA-256.
 - **Phase 2 — Deterministic Classification & Semantic Enrichment (`v0.2.0`):** Multi-tier game engine classifier (evidence levels 1-4), multi-dimensional indie authenticity scoring algorithm with major publisher exclusion, formal generative AI disclosure classifier, and initial Gold Star Schema.
-- **Phase 3 — Massive Ingestion & Boxleiter Commercial Metrics (`v0.3.0`):** Batch discovery via authenticated `IStoreService/GetAppList`, resilient console progress bar with dynamic ETA, multi-era Boxleiter sales and net revenue modeling, data cleansing for delisted items, and consolidation of **5,759 titles (4,206 confirmed indies representing $6.238B USD net revenue)** in the Gold Data Mart.
-- **Phase 4 — Commercial Viability Audit & Headless Reporting (`v0.4.0`, in development):** Predictive sales and optimal pricing regression models, launch window competition density metrics, underserved niche gap detection, and automated headless PDF/JSON executive audit reports.
+- **Phase 3 — Massive Ingestion & Boxleiter Commercial Metrics (`v0.3.0`):** Batch discovery via authenticated `IStoreService/GetAppList`, resilient console progress bar with dynamic ETA, multi-era Boxleiter sales and net revenue modeling, and data cleansing for delisted items.
+- **Phase 3 Extension — Distributed Multi-Node Sharding & Telemetry (`v0.3.1`):** Deterministic modular AppID sharding across distributed workers (Local PC and Google Colab Pro), immutable master manifest freezing, periodic tar.gz snapshot synchronization, and per-node telemetry benchmark collector.
+- **Phase 3 Extension — Zero-Gap Reconciliation & Pre-Silver Audit (`v0.3.2`):** Zero-gap atomic snapshot merger, 100% catalog completeness audit against master manifest with residual fallback sweep, blocking Contract 10 pre-Silver verification, and consolidation of **60,899 titles (55,786 confirmed indies representing $7.006B USD net developer revenue and $15.121B USD total)** in the Gold Data Mart (`data/oro/indie_census_mart.db`).
+- **Phase 4 — Gold Analytical Mart, CI Automation & Open Dataset (`v0.4.0`, upcoming):** Aggregated Gold master tables (engine penetration, price distribution, saturation indices), secondary community tags enrichment to unlock Level 2 engine classification, automated GitHub Actions Cron execution, public open dataset release (Parquet/CSV with `metodologia.md`, `diccionario_datos.md`, `limitaciones.md`), and the Strategic Control Milestone (12.1.1).
+- **Phase 5 — Applied Data Science & Predictive Commercial Viability Core (`v0.5.0`):** Empirical sales and pricing regression models, launch window competition density metrics, and underserved niche gap detection.
+- **Phase 6 — Headless Executive Audit Reporter & Diagnostic Microservice (`v1.0.0`):** Automated headless PDF/JSON audit report generation and decoupled diagnostic service.
 
 ---
 
@@ -97,8 +101,8 @@ Discovers, extracts, normalizes, and derives commercial revenue metrics for larg
 # Discover and ingest catalog titles, generating the SQLite Data Mart
 python -m src.pipeline --modo masivo --descubrir --max-juegos 6000 --generar-oro
 
-# Reprocess existing local Bronze partitions without network calls
-python -m src.pipeline --modo masivo --omitir-extraccion --generar-oro
+# Reprocess existing local Bronze partitions without network calls (60,899 titles)
+python -m src.pipeline --modo masivo --omitir-extraccion --generar-oro --fecha 2026-10-18
 ```
 
 ### CLI Options Reference
