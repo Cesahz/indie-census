@@ -91,3 +91,71 @@ def test_datos_nulos_o_vacios(taxonomia) -> None:
     assert 0.0 <= res.indie_score <= 1.0
     assert isinstance(res.is_indie, bool)
     assert res.es_major_publisher is False
+
+
+def test_distribuidor_masivo_bloqueante(taxonomia) -> None:
+    """Verificar que un distribuidor masivo con mas de 25 titulos es descalificado como indie."""
+    res = calcular_indie_score(
+        tags=["Indie", "Casual"],
+        generos=["Casual"],
+        developers=["Massive Farm"],
+        publishers=["Massive Farm"],
+        price_usd=1.99,
+        language_count=1,
+        titulos_del_publisher=50,
+        taxonomia=taxonomia,
+    )
+    assert res.is_indie is False
+    assert res.es_major_publisher is True
+
+
+def test_publisher_indie_mediano_curva_suave(taxonomia) -> None:
+    """Verificar que un publisher independiente mediano (ej. 12 titulos) califica como indie."""
+    res = calcular_indie_score(
+        tags=["Indie", "Adventure"],
+        generos=["Adventure"],
+        developers=["Boutique Studio"],
+        publishers=["Indie Label"],
+        price_usd=19.99,
+        language_count=6,
+        titulos_del_publisher=12,
+        taxonomia=taxonomia,
+    )
+    assert res.is_indie is True
+    assert res.es_major_publisher is False
+    assert res.desglose["auto_publicado_o_pequeno"] > 0.0
+
+
+def test_indie_multilingue_no_penalizado(taxonomia) -> None:
+    """Verificar que un juego indie traducido a 7 idiomas comunes no sufre penalizacion drastica."""
+    res = calcular_indie_score(
+        tags=["Indie", "Action", "Pixel Graphics"],
+        generos=["Action"],
+        developers=["Solo Dev"],
+        publishers=["Solo Dev"],
+        price_usd=14.99,
+        language_count=7,
+        titulos_del_publisher=1,
+        taxonomia=taxonomia,
+    )
+    assert res.is_indie is True
+    assert res.indie_score >= 0.85
+    assert res.desglose["pocos_idiomas"] > 0.0
+
+
+def test_major_publishers_adicionales_bloqueados(taxonomia) -> None:
+    """Verificar que publishers corporativos como THQ Nordic, Paradox y Atari son bloqueados."""
+    for pub in ["THQ Nordic", "Paradox Interactive", "Atari", "Strategy First", "Focus Entertainment"]:
+        res = calcular_indie_score(
+            tags=["Indie", "Strategy"],
+            generos=["Strategy"],
+            developers=["Studio"],
+            publishers=[pub],
+            price_usd=19.99,
+            language_count=3,
+            titulos_del_publisher=5,
+            taxonomia=taxonomia,
+        )
+        assert res.es_major_publisher is True
+        assert res.is_indie is False
+
