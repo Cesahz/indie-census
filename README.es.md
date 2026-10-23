@@ -9,64 +9,50 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)
 
-Observatorio abierto de datos del ecosistema de desarrollo de videojuegos independiente.
+Observatorio de datos abiertos y Lakehouse analítico del ecosistema de desarrollo de videojuegos independiente en Steam.
 
----
+> **Estado del proyecto:** En desarrollo activo (`v0.3.4`). Construido bajo desarrollo guiado por pruebas (TDD) estricto, suites herméticas sin llamadas a la red, contratos de calidad de datos tipados y arquitectura local-first.
 
-> **Estado del proyecto:** En desarrollo activo (`v0.3.4`). Este es un proyecto personal que se construye de forma pausada y metódica, priorizando la solidez de la ingeniería de software y el rigor analítico. Todo módulo se diseña bajo desarrollo guiado por pruebas (TDD), con suites de pruebas herméticas (sin llamadas a la red ni aleatoriedad no controlada), tipado estricto y contratos de datos inmutables antes de cada implementación.
+## Visión General y Áreas de Enfoque
 
----
+Los debates en torno al desarrollo independiente—adopción de motores, saturación de la tienda, dinámicas de precios o divulgación de IA generativa—suelen basarse en impresiones anecdóticas o reportes comerciales cerrados con metodologías no auditables.
 
-## Intención y Visión
+Indie Census provee una plataforma de datos abierta, reproducible y verificable que transforma la conversación empírica en evidencia cuantitativa. El observatorio analiza cinco áreas principales:
 
-Este observatorio nace como una iniciativa personal con el propósito de aportar valor y datos abiertos a la comunidad de desarrollo de videojuegos, analistas e investigadores.
+1. **Adopción de Motores de Videojuegos:** Distribución y evolución de tecnologías de desarrollo (motores de código abierto como Godot, comerciales como Unity/Unreal y frameworks propios) a lo largo del catálogo.
+2. **Dinámica de Precios:** Rangos de precios, patrones de lanzamiento y distribución comercial en producciones independientes.
+3. **Divulgación de IA Generativa:** Monitoreo y análisis cuantitativo del uso declarado de IA en assets y código según descriptores formales de la plataforma.
+4. **Datos Abiertos y Reproducibilidad:** Publicación de datasets limpios y código fuente del pipeline para que cualquier hallazgo pueda ser auditado y reproducido de forma independiente.
+5. **Modelado de Viabilidad Comercial:** Modelado econométrico Boxleiter multi-era de copias e ingresos netos, cálculo de densidad competitiva en ventanas de lanzamiento y detección de nichos desatendidos.
 
-El debate sobre la industria del videojuego independiente —motores utilizados, saturación de tiendas, precios y la irrupción de nuevas tecnologías— suele estar dominado por impresiones anecdóticas, discusiones polarizadas en foros o análisis comerciales que no publican sus datos crudos ni su metodología.
+## Arquitectura
 
-**Indie Census** busca aportar a la comunidad una **fuente pública, citable y metodológicamente auditable** que transforme la conversación empírica en evidencia cuantitativa abierta.
+La plataforma implementa una arquitectura Data Lakehouse de tres capas con contratos bloqueantes de calidad de datos en cada transición:
 
-El proyecto no busca validar una postura particular ni se restringe a una herramienta específica, sino medir con neutralidad las transformaciones reales del sector:
+- **Capa Bronce (`data/bronce/`):** Almacenamiento inmutable del payload crudo particionado por fecha UTC y tipo de recurso (`appdetails`, `appreviews`, `applist`), validado mediante hashes criptográficos SHA-256.
+- **Capa Plata (`data/plata/`):** Normalización tipada estricta mediante Apache Arrow y Parquet comprimido en Snappy, fechas ISO-8601, parseo de tablas HTML de idiomas y clasificación semántica (`dim_game`, `game_review_summary`).
+- **Capa Oro (`data/oro/`):** Modelado dimensional Star Schema (`dim_game`, `dim_date`, `dim_genre_bridge`, `fact_game_performance`) exportado a un Data Mart relacional en SQLite (`data/oro/indie_census_mart.db`) con índices B-Tree para consumo en BI.
 
-1. **Adopción y transición de motores técnicos:** Cómo evolucionan y se distribuyen las tecnologías de desarrollo (motores de código abierto, motores comerciales y herramientas propias) en el catálogo independiente.
-2. **Dinámica de precios y sostenibilidad comercial:** Rangos de precios, estrategias de lanzamiento y supervivencia económica de producciones de pequeña escala.
-3. **Divulgación de Inteligencia Artificial generativa:** Detección y análisis cuantitativo de las declaraciones de uso de IA en assets y código según las políticas públicas de las plataformas de distribución.
-4. **Metodología y datos abiertos:** Publicación no solo de conclusiones o gráficos, sino de los datasets limpios y el código del pipeline para que cualquier persona en la comunidad pueda reproducir o auditar los resultados.
-5. **Auditoría de Viabilidad Comercial y Data Science Aplicada:** Evolución desde la observación descriptiva hacia un motor diagnóstico prescriptivo y predictivo. Aportar a desarrolladores, publishers y consultores modelos de regresión y scoring de ventas/pricing, cálculo de densidad competitiva en ventanas de lanzamiento, detección de tags saturados frente a nichos desatendidos, y generación headless automatizada de reportes ejecutivos de auditoría (PDF/JSON).
+### Cronograma de Versiones e Hitos
 
----
-
-## Arquitectura y Evolución del Proyecto
-
-La plataforma implementa una arquitectura Data Lakehouse de tres capas (Bronce, Plata, Oro) con contratos bloqueantes de calidad de datos en cada transición:
-
-- **Capa Bronce (`data/bronce/`):** Almacenamiento inmutable del payload crudo particionado por fecha UTC y tipo de recurso (`appdetails`, `appreviews`, `applist`), garantizado mediante verificación criptográfica de integridad.
-- **Capa Plata (`data/plata/`):** Normalización, tipado estricto con Apache Arrow/Parquet y contratos automatizados de calidad de datos (`dim_game`, `game_review_summary`).
-- **Capa Oro (`data/oro/`):** Modelado dimensional Star Schema (`dim_game`, `dim_engine`, `fact_game_performance`) exportado atómicamente a un Data Mart relacional en SQLite (`data/oro/indie_census_mart.db`) para su consulta analítica y conexión con herramientas de BI (Power BI, DuckDB, Metabase).
-
-### Hitos y Versiones
-
-- **Fase 0 — Gobernanza del Repositorio y CI (`v0.0.0`):** Jerarquía canónica de directorios, aislamiento estricto en `.gitignore`, estándar de conventional commits y suite de pruebas de gobernanza.
-- **Fase 1 — MVP Vertical Slice (`v0.1.0`):** Cliente HTTP resiliente con control de cuotas 429, gestor persistente de checkpoints tolerante a fallos y muestra de control calibrada de 100 títulos congelada mediante hash SHA-256.
-- **Fase 2 — Clasificación Determinista y Enriquecimiento Semántico (`v0.2.0`):** Clasificador jerárquico de motores (niveles de evidencia 1-4), algoritmo multidimensional de autenticidad indie con exclusión de grandes corporaciones, detector formal de divulgación de IA y Star Schema analítico inicial.
-- **Fase 3 — Ingesta Masiva y Métricas Comerciales (`v0.3.0`):** Descubrimiento por lotes vía `IStoreService/GetAppList`, barra visual interactiva en consola con cálculo dinámico de ETA, modelo de ventas y recaudación neta Boxleiter multi-era, y saneamiento de datos preventivo para títulos retirados.
-- **Extensión de Fase 3 — Sharding Distribuido Multi-Nodo y Telemetría (`v0.3.1`):** Sharding modular determinista por AppID entre nodos de cómputo (PC Local y Google Colab Pro), congelación de manifiesto maestro inmutable, empaquetado periódico de snapshots tar.gz y colector de telemetría y benchmark por nodo.
-- **Extensión de Fase 3 — Reconciliación Cero-Huecos y Auditoría Pre-Plata (`v0.3.2`):** Unificador atómico de snapshots sin huecos, auditoría de completitud al 100% contra el manifiesto maestro con barrido residual tolerante a fallos, Contrato 10 bloqueante de verificación criptográfica y consolidación de **63.770 títulos (57.011 indies auténticos que representan $7.120 millones de USD netos y $15.197 millones totales)** en el Data Mart analítico de la capa Oro (`data/oro/indie_census_mart.db`).
-- **Fase 4 — Capa Oro Analítica, Automatización en CI y Dataset Abierto (`v0.4.0`, próxima fase):** Tablas maestras agregadas de la capa Oro (penetración de motores, distribución de precios, métricas de saturación), enriquecimiento secundario de tags comunitarios de tienda para clasificación de motores Nivel 2, automatización periódica en GitHub Actions Cron, publicación del dataset abierto (Parquet/CSV con `metodologia.md`, `diccionario_datos.md`, `limitaciones.md`) y el Hito de Control Estratégico (12.1.1).
-- **Fase 5 — Data Science Aplicada y Motor de Viabilidad Comercial (`v0.5.0`):** Modelos predictivos de regresión y pricing de ventas, densidad competitiva en ventanas de lanzamiento y detección algorítmica de nichos desatendidos.
-- **Fase 6 — Reportes Ejecutivos Headless y Micro-Servicio de Diagnóstico (`v1.0.0`):** Generador desatendido de informes de auditoría ejecutiva exportables en PDF y JSON y micro-servicio desacoplado de diagnóstico.
-
----
+- **Fase 0 — Gobernanza del Repositorio y CI (`v0.0.0`):** Jerarquía canónica de directorios, aislamiento en `.gitignore`, estándar de conventional commits y suite de pruebas de gobernanza.
+- **Fase 1 — MVP Vertical Slice (`v0.1.0`):** Cliente HTTP resiliente con control de cuotas 429, gestor persistente de checkpoints tolerante a fallos y muestra de control calibrada de 100 títulos bloqueada mediante hash SHA-256.
+- **Fase 2 — Clasificación Determinista y Semántica (`v0.2.0`):** Clasificador jerárquico de motores (niveles de evidencia 1 a 4), algoritmo multidimensional de autenticidad indie con exclusión de grandes corporaciones, detector formal de divulgación de IA y Star Schema inicial.
+- **Fase 3 — Ingesta Masiva y Métricas Comerciales (`v0.3.0`):** Descubrimiento por lotes vía `IStoreService/GetAppList`, barra visual interactiva en consola con cálculo dinámico de ETA, y modelo Boxleiter de copias y recaudación neta multi-era.
+- **Extensión de Fase 3 — Sharding Distribuido y Telemetría (`v0.3.1`):** Sharding modular determinista por AppID (`idx % N`) entre nodos de cómputo (PC Local y Google Colab Pro), congelación de manifiesto maestro inmutable, sincronización de snapshots tar.gz y colector de telemetría de red.
+- **Extensión de Fase 3 — Reconciliación Cero-Huecos y Auditoría Forense (`v0.3.2` – `v0.3.4`):** Unificador atómico de snapshots sin huecos, auditoría de completitud al 100% contra el manifiesto maestro, Contrato 10 bloqueante de verificación criptográfica y consolidación de **63.770 títulos (57.011 indies auténticos que representan $7.120M USD netos estimados)** en el Data Mart de la capa Oro (`data/oro/indie_census_mart.db`).
+- **Fase 4 — Capa Oro Analítica, CI y Dataset Abierto (`v0.4.0`, próxima fase):** Tablas maestras agregadas (penetración de motores, distribución de precios, saturación), re-extracción de reseñas para neutralizar sesgo idiomático (`language=all`), enriquecimiento de tags comunitarios, automatización en GitHub Actions y publicación del dataset abierto (Parquet/CSV).
+- **Fase 5 — Data Science Aplicada y Viabilidad Comercial (`v0.5.0`):** Modelos predictivos de regresión y pricing de ventas, densidad competitiva en ventanas de lanzamiento y detección algorítmica de nichos desatendidos.
+- **Fase 6 — Reportes Ejecutivos Headless (`v1.0.0`):** Generador desatendido de informes de auditoría ejecutiva exportables en PDF y JSON y CLI analítica desacoplada.
 
 ## Principios de Ingeniería
 
-- **TDD Invariante:** Ningún módulo de extracción, transformación o calidad se implementa sin su correspondiente suite de pruebas previa en verde (commit `test:` antes del commit `feat:`).
-- **Hermeticidad total:** Pruebas unitarias y de integración que no tocan la red real; inyección de dependencias para reloj, pausas y generadores aleatorios.
-- **Inmutabilidad y trazabilidad:** Los datos crudos jamás se sobreescriben; cualquier recomputación parte de la fuente original histórica.
-- **Diseño sin costo:** Ejecución automatizada aprovechando infraestructura ligera y reproducible sin servidores dedicados de pago.
-- **Ingesta distribuida multi-nodo:** Sharding modular determinista (`idx % total_workers == worker_id`) con aceleración de 2.21x en nodos en la nube y recolección de más de 101.000 títulos crudos a costo cero de infraestructura de servidores (consúltese la [evaluación de rendimiento distribuido](benchmarks/comparativa_nodos_pc_vs_colab.md)).
-- **Eficiencia de ingesta:** Optimización de cuotas y rendimiento mediante endpoints autenticados por lotes (reducción del 99.4% en tiempo de catalogación y aceleración de 188x frente a endpoints anónimos; consúltese la [evaluación técnica de rendimiento](benchmarks/steam_api_throughput.md)).
-
----
+- **TDD Estricto:** Ningún módulo de extracción, transformación o calidad se implementa sin su correspondiente suite de pruebas previa en verde (flujo `test:` antes de `feat:`).
+- **Hermeticidad Total:** Pruebas unitarias y de integración que no realizan llamadas a la red; inyección de dependencias para reloj, pausas y generadores aleatorios.
+- **Inmutabilidad en Lakehouse:** Los datos crudos jamás se sobreescriben; toda recomputación parte deterministamente de la fuente histórica en Bronce.
+- **Infraestructura de Bajo Costo (Local-First):** Ejecución automatizada y reproducible en hardware ligero sin dependencias de servidores en la nube de pago.
+- **Ingesta Distribuida:** Sharding modular determinista (`idx % total_workers == worker_id`) con aceleración comprobada de 2.21x en nodos cloud y recolección de más de 101.000 títulos crudos (consúltese la [evaluación de rendimiento distribuido](benchmarks/comparativa_nodos_pc_vs_colab.md)).
+- **Resiliencia HTTP y Control de Tasa:** Algoritmo automático de backoff exponencial adaptativo con jitter y lectura del encabezado `Retry-After`, gestionando con seguridad más de 34.000 respuestas HTTP 429 sin caídas de servicio (consúltese la [evaluación técnica de rendimiento](benchmarks/steam_api_throughput.md)).
 
 ## Configuración del Entorno
 
@@ -86,8 +72,6 @@ pip install -r requirements.txt
 cp .env.example .env
 # Configurar STEAM_API_KEY en .env
 ```
-
----
 
 ## Ejecución del Pipeline
 
@@ -127,8 +111,6 @@ python -m src.pipeline --modo masivo --omitir-extraccion --generar-oro --fecha 2
 | `--ruta-base` | Ruta de directorio | `data/` | Directorio base de las capas del lago de datos (Bronce, Plata, Oro). |
 | `--manifiesto` | Ruta de archivo | `config/muestra_control.yaml` | Ruta al manifiesto YAML de la muestra de control. |
 
----
-
 ## Verificación de Calidad y Pruebas
 
 La suite de pruebas garantiza la integridad y el aislamiento hermético de todos los componentes:
@@ -144,10 +126,6 @@ pytest tests/gobernanza/
 ruff check .
 ```
 
----
-
 ## Licencia
 
 Este proyecto se distribuye bajo los términos de la [Licencia MIT](LICENSE).
-
-
