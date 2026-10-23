@@ -159,12 +159,31 @@ class SteamClient:
         return datos
 
     def get_app_reviews_summary(self, appid: int) -> dict[str, Any]:
-        """Obtener resumen de resenas de aplicacion desde steam store api."""
+        """Obtener resumen de resenas de aplicacion desde steam web api o store api."""
+        #si se dispone de api_key, consultar endpoint oficial de webapi
+        if self.api_key:
+            url_api = (
+                f"{self.base_url_api}/IUserReviewsService/GetAppReviews/v1/"
+                f"?key={self.api_key}&appid={appid}&max_num_reviews=0"
+            )
+            try:
+                datos = self._ejecutar_solicitud(url_api)
+                resp = datos.get("response", {})
+                if "query_summary" in resp:
+                    return {
+                        "success": 1,
+                        "query_summary": resp["query_summary"],
+                    }
+            except Exception:
+                pass
+
+        #fallback a endpoint tradicional de tienda con todos los idiomas
         url = (
             f"https://store.steampowered.com/appreviews/{appid}"
-            f"?json=1&language={self.language}&purchase_type=all&num_per_page=0"
+            f"?json=1&language=all&purchase_type=all&num_per_page=0"
         )
         return self._ejecutar_solicitud(url)
+
 
     def get_app_list_batch(
         self,

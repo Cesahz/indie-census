@@ -94,17 +94,18 @@ def ejecutar_pipeline(
             "oro": None,
         }
 
+    appids_objetivo: Optional[list[int]] = None
+    if modo == "masivo" and manifiesto_maestro is not None:
+        appids_maestros = cargar_manifest_master(Path(manifiesto_maestro))
+        appids_objetivo = particionar_appids_por_modulo(
+            appids=appids_maestros,
+            worker_id=worker_id,
+            total_workers=total_workers,
+        )
+
     if not omitir_extraccion:
         if modo == "masivo":
-            appids_objetivo: list[int] = []
-            if manifiesto_maestro is not None:
-                appids_maestros = cargar_manifest_master(Path(manifiesto_maestro))
-                appids_objetivo = particionar_appids_por_modulo(
-                    appids=appids_maestros,
-                    worker_id=worker_id,
-                    total_workers=total_workers,
-                )
-            elif descubrir:
+            if appids_objetivo is None and descubrir:
                 cliente_steam = client or SteamClient()
                 appids_descubiertos = descubrir_catalogo_steam(
                     client=cliente_steam,
@@ -122,7 +123,7 @@ def ejecutar_pipeline(
                     appids_objetivo = appids_descubiertos
 
             metricas_extraccion = ejecutar_ingesta_masiva(
-                appids=appids_objetivo,
+                appids=appids_objetivo or [],
                 client=client,
                 checkpoint=None,
                 fecha=fecha,
@@ -156,6 +157,7 @@ def ejecutar_pipeline(
         fecha=fecha,
         validador=validador,
         modo=modo,
+        appids_objetivo=appids_objetivo if modo == "masivo" else None,
     )
 
     #4. opcional: generacion de data mart analitico en capa oro (parquet y sqlite)

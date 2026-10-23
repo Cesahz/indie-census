@@ -72,13 +72,13 @@ def extraer_juego(
     if not checkpoint.esta_completado("appreviews_resumen", appid):
         url_reviews = (
             f"https://store.steampowered.com/appreviews/{appid}"
-            f"?json=1&language={client.language}&purchase_type=all&num_per_page=0"
+            f"?json=1&language=all&purchase_type=all&num_per_page=0"
         )
         payload_reviews = client.get_app_reviews_summary(appid)
         envoltorio_reviews = crear_envoltorio_bronce(
             fuente="steam.appreviews_resumen",
             url_solicitada=url_reviews,
-            parametros={"language": client.language, "purchase_type": "all", "num_per_page": 0},
+            parametros={"language": "all", "purchase_type": "all", "num_per_page": 0},
             estado_http=200,
             payload=payload_reviews,
         )
@@ -439,7 +439,7 @@ def ejecutar_ingesta_masiva(
                     checkpoint=cp_activo,
                     appid=appid,
                     fecha=fecha,
-                    ruta_base=ruta_base,
+                    ruta_base=base_dir,
                 )
                 procesados_exito += 1
                 juegos_desde_sync += 1

@@ -44,9 +44,18 @@ def mock_steam_client() -> SteamClient:
                         },
                     }
                 }
-        elif "appreviews" in url:
+        elif "appreviews" in url or "GetAppReviews" in url:
             mock_resp.json.return_value = {
                 "success": 1,
+                "response": {
+                    "query_summary": {
+                        "num_reviews": 100,
+                        "review_score": 8,
+                        "total_positive": 80,
+                        "total_negative": 20,
+                        "total_reviews": 100,
+                    }
+                },
                 "query_summary": {
                     "num_reviews": 100,
                     "review_score": 8,

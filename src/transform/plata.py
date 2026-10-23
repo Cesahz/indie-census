@@ -3,6 +3,7 @@
 import json
 import os
 import re
+from collections import Counter
 from datetime import date
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -14,6 +15,7 @@ import yaml
 from src.classify.ai import clasificar_divulgacion_ia
 from src.classify.engine import clasificar_motor
 from src.classify.indie import calcular_indie_score
+from src.classify.taxonomy import cargar_taxonomia
 from src.quality.contratos import FECHA_MAXIMA_CATALOGO, FECHA_MINIMA_CATALOGO
 from src.version import PIPELINE_VERSION
 
@@ -151,6 +153,8 @@ def parsear_appdetails(envoltorio: dict[str, Any], appid: int) -> dict[str, Any]
 
     generos = data.get("genres")
     descripciones = [g.get("description") for g in generos if isinstance(g, dict)] if isinstance(generos, list) else []
+    categorias = data.get("categories")
+    cat_descripciones = [c.get("description") for c in categorias if isinstance(c, dict)] if isinstance(categorias, list) else []
     desc_html = (
         data.get("detailed_description")
         or data.get("about_the_game")
@@ -176,6 +180,7 @@ def parsear_appdetails(envoltorio: dict[str, Any], appid: int) -> dict[str, Any]
         "extracted_at": meta.get("extraido_en"),
         "_desc_texto": desc_texto,
         "_descriptors_steam": descriptors_list,
+        "_categories": _lista_cadenas(cat_descripciones),
     }
 
 
@@ -264,8 +269,9 @@ def construir_tablas_plata(
     else:
         items = _cargar_manifiesto(ruta_man)
 
-    filas_dim: list[dict[str, Any]] = []
-    filas_resenas: list[dict[str, Any]] = []
+    candidatos_validos: list[tuple[dict[str, Any], dict[str, Any], dict[str, Any]]] = []
+    conteo_publishers: Counter[str] = Counter()
+
     for item in items:
         appid = int(item["appid"])
         if appid not in detalles or appid not in resenas:
@@ -296,31 +302,62 @@ def construir_tablas_plata(
             if not fila_dim.get("is_free") and fila_dim.get("price_launch_usd_cents") is None:
                 continue
 
+        candidatos_validos.append((item, fila_dim, fila_resena))
+        for pub in fila_dim.get("publishers", []):
+            if pub and pub.strip():
+                conteo_publishers[pub.strip().lower()] += 1
+
+    #cargar taxonomia una sola vez para evitar I/O redundante
+    tax_config = cargar_taxonomia()
+    filas_dim: list[dict[str, Any]] = []
+    filas_resenas: list[dict[str, Any]] = []
+
+    for item, fila_dim, fila_resena in candidatos_validos:
         desc_texto = fila_dim.pop("_desc_texto", "")
         descriptors = fila_dim.pop("_descriptors_steam", [])
+        categories = fila_dim.pop("_categories", [])
+
+        #etiquetas consolidadas combinando categorias de tienda y generos
+        etiquetas_tienda = categories + [g for g in fila_dim["genres"] if g not in categories]
 
         res_motor = clasificar_motor(
             descripcion=desc_texto,
-            tags=fila_dim["genres"],
+            tags=etiquetas_tienda,
+            taxonomia=tax_config,
         )
 
         precio_usd = (
             0.0 if fila_dim["is_free"]
             else (fila_dim["price_launch_usd_cents"] / 100.0 if fila_dim["price_launch_usd_cents"] is not None else None)
         )
+
+        #determinar tamano del catalogo del publisher
+        titulos_pub = None
+        if fila_dim["publishers"]:
+            conteos_pub = [
+                conteo_publishers.get(p.strip().lower(), 1)
+                for p in fila_dim["publishers"]
+                if p and p.strip()
+            ]
+            if conteos_pub:
+                titulos_pub = max(conteos_pub)
+
         res_indie = calcular_indie_score(
-            tags=fila_dim["genres"],
+            tags=etiquetas_tienda,
             generos=fila_dim["genres"],
             developers=fila_dim["developers"],
             publishers=fila_dim["publishers"],
             price_usd=precio_usd,
             language_count=fila_dim["language_count"],
+            titulos_del_publisher=titulos_pub,
+            taxonomia=tax_config,
         )
 
         res_ia = clasificar_divulgacion_ia(
             descriptors_steam=descriptors,
-            tags=fila_dim["genres"],
+            tags=etiquetas_tienda,
             descripcion_o_notas=desc_texto,
+            taxonomia=tax_config,
         )
 
         es_grupo_godot = item.get("grupo") == "godot"
