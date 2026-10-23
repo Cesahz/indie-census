@@ -37,7 +37,7 @@ def calcular_indie_score(
     tiene_tag_indie = ("indie" in tags_norm) or ("indie" in generos_norm)
     score_tag = 1.0 if tiene_tag_indie else 0.0
 
-    #2. evaluar ausencia de major publisher conocido (con limites de palabra exactos)
+    #2. evaluar ausencia de major publisher conocido o distribuidor masivo
     devs_norm = [d.strip() for d in (developers or []) if d]
     pubs_norm = [p.strip() for p in (publishers or []) if p]
 
@@ -52,7 +52,13 @@ def calcular_indie_score(
         if es_major:
             break
 
-    score_sin_major = 0.0 if es_major else 1.0
+    #evaluar distribucion masiva por tamano de catalogo (>25 titulos)
+    max_mediano = getattr(tax.umbrales, "max_titulos_publisher_mediano", 25)
+    es_distribuidor_masivo = bool(
+        titulos_del_publisher is not None and titulos_del_publisher > max_mediano
+    )
+    es_corporativo_o_masivo = es_major or es_distribuidor_masivo
+    score_sin_major = 0.0 if es_corporativo_o_masivo else 1.0
 
     #3. evaluar autopublicacion o publisher pequeno
     es_autopublicado = False
@@ -60,23 +66,20 @@ def calcular_indie_score(
         #verificar coincidencia entre desarrollador y publicador
         for dev in devs_norm:
             dev_l = dev.lower()
-            if any(dev_l == p.lower() or dev_l in p.lower() for p in pubs_norm):
+            if any(dev_l == p.lower() or dev_l in p.lower() or p.lower() in dev_l for p in pubs_norm):
                 es_autopublicado = True
                 break
 
-    es_pequeno_catalogo = False
-    if titulos_del_publisher is not None:
-        es_pequeno_catalogo = titulos_del_publisher <= tax.umbrales.max_titulos_publisher_pequeno
-
-    catalogo_excedido = (
-        titulos_del_publisher is not None
-        and titulos_del_publisher > tax.umbrales.max_titulos_publisher_pequeno
-    )
-
-    if es_major or catalogo_excedido:
+    if es_corporativo_o_masivo:
         #si es publisher grande o corporacion no aplica bonificacion indie
         score_pub = 0.0
-    elif es_autopublicado or es_pequeno_catalogo:
+    elif titulos_del_publisher is not None and titulos_del_publisher <= tax.umbrales.max_titulos_publisher_pequeno:
+        score_pub = 1.0
+    elif titulos_del_publisher is not None and titulos_del_publisher <= max_mediano:
+        #curva suave para publishers independientes medianos entre 5 y 25 titulos
+        rango = max_mediano - tax.umbrales.max_titulos_publisher_pequeno
+        score_pub = round(max(0.4, 1.0 - ((titulos_del_publisher - tax.umbrales.max_titulos_publisher_pequeno) / rango * 0.6)), 4)
+    elif es_autopublicado:
         score_pub = 1.0
     elif not pubs_norm and devs_norm:
         #sin publicador listado, asume autogestion
@@ -93,7 +96,7 @@ def calcular_indie_score(
         score_precio = 1.0
     else:
         exceso = price_usd - tax.umbrales.precio_max_indie_usd
-        score_precio = max(0.0, 1.0 - (exceso / 40.0))
+        score_precio = max(0.0, 1.0 - (exceso / 30.0))
 
     #5. evaluar cantidad de idiomas (proxy de presupuesto de localizacion)
     if language_count is None:
@@ -102,7 +105,7 @@ def calcular_indie_score(
         score_idiomas = 1.0
     else:
         exceso_idiomas = language_count - tax.umbrales.max_idiomas_indie
-        score_idiomas = max(0.0, 1.0 - (exceso_idiomas / 10.0))
+        score_idiomas = max(0.0, 1.0 - (exceso_idiomas / 15.0))
 
     desglose = {
         "tag_indie": round(score_tag * pesos.tag_indie, 4),
@@ -115,11 +118,11 @@ def calcular_indie_score(
     total_score = sum(desglose.values())
     total_score_acotado = max(0.0, min(1.0, round(total_score, 4)))
 
-    is_indie = (not es_major) and (total_score_acotado >= tax.umbrales.umbral_corte_is_indie)
+    is_indie = (not es_corporativo_o_masivo) and (total_score_acotado >= tax.umbrales.umbral_corte_is_indie)
 
     return ResultadoIndie(
         indie_score=total_score_acotado,
         is_indie=is_indie,
         desglose=desglose,
-        es_major_publisher=es_major,
+        es_major_publisher=es_corporativo_o_masivo,
     )

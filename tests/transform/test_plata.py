@@ -470,22 +470,23 @@ def test_ejecutar_transformacion_plata_invoca_validador_antes_de_persistir(escen
 
 
 def test_construir_tablas_calcula_y_pasa_titulos_del_publisher(tmp_path: Path) -> None:
-    #verificar que el conteo consolidado de titulos por publisher se calcula y penaliza catalogos grandes
+    #verificar que el conteo consolidado de titulos por publisher se calcula y penaliza catalogos masivos
     fecha = "2026-10-01"
-    #crear 7 juegos del mismo publisher 'MegaCorp Indie'
-    appids = list(range(901, 908))
+    #crear 28 juegos del mismo publisher 'MegaCorp Distribution' (>25 titulos)
+    appids = list(range(901, 929))
     juegos_man = []
     for aid in appids:
         payload = _payload_details(aid, nombre=f"Juego {aid}", precio=999, generos=["Indie"])
-        payload[str(aid)]["data"]["publishers"] = ["MegaCorp Indie"]
-        payload[str(aid)]["data"]["developers"] = ["MegaCorp Indie"]
+        payload[str(aid)]["data"]["publishers"] = ["MegaCorp Distribution"]
+        payload[str(aid)]["data"]["developers"] = ["MegaCorp Dev"]
         _poblar_bronce(tmp_path, aid, payload, _payload_reviews(10, 1), fecha=fecha)
         juegos_man.append({"appid": aid, "grupo": "general", "titulo": f"Juego {aid}", "release_date": "2024-05-29"})
 
     manifiesto = _escribir_manifiesto(tmp_path / "muestra_pubs.yaml", juegos_man)
     dim, _ = construir_tablas_plata(tmp_path, manifiesto, fecha=fecha)
     filas = dim.to_pylist()
-    #con 7 titulos excede max_titulos_publisher_pequeno (5)
+    #con 28 titulos excede max_titulos_publisher_mediano (25)
     for fila in filas:
-        assert fila["indie_score"] < 0.85
+        assert fila["indie_score"] < 0.60
+        assert fila["is_indie"] is False
 

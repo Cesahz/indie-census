@@ -32,22 +32,24 @@ class AIDisclosureTaxonomia(BaseModel):
 class PesosIndieScore(BaseModel):
     """Ponderacion de los componentes del indie score."""
 
-    tag_indie: float = 0.30
+    tag_indie: float = 0.25
     auto_publicado_o_pequeno: float = 0.25
     precio_bajo: float = 0.15
     pocos_idiomas: float = 0.10
-    sin_major_publisher: float = 0.20
+    sin_major_publisher: float = 0.25
 
 
 class UmbralesTaxonomia(BaseModel):
     """Umbrales de corte y listas de exclusion para juegos independientes."""
 
-    precio_max_indie_usd: float = 30.0
-    max_idiomas_indie: int = 3
+    precio_max_indie_usd: float = 35.0
+    max_idiomas_indie: int = 8
     max_titulos_publisher_pequeno: int = 5
+    max_titulos_publisher_mediano: int = 25
     umbral_corte_is_indie: float = 0.6
     pesos_indie_score: PesosIndieScore = Field(default_factory=PesosIndieScore)
     publishers_excluidos: list[str] = Field(default_factory=list)
+
 
 
 class ConfiguracionTaxonomia(BaseModel):

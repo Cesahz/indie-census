@@ -101,16 +101,17 @@ ai_disclosure:
     - '(?i)\bai-generated\b'
 
 umbrales:
-  precio_max_indie_usd: 30.0
-  max_idiomas_indie: 3
+  precio_max_indie_usd: 35.0
+  max_idiomas_indie: 8
   max_titulos_publisher_pequeno: 5
+  max_titulos_publisher_mediano: 25
   umbral_corte_is_indie: 0.6
   pesos_indie_score:
-    tag_indie: 0.30
+    tag_indie: 0.25
     auto_publicado_o_pequeno: 0.25
     precio_bajo: 0.15
     pocos_idiomas: 0.10
-    sin_major_publisher: 0.20
+    sin_major_publisher: 0.25
   publishers_excluidos:
     - "Electronic Arts"
     - "EA"
@@ -118,6 +119,7 @@ umbrales:
     - "Square Enix"
     - "Sony Interactive Entertainment"
     - "PlayStation PC LLC"
+    - "PlayStation Publishing LLC"
     - "Xbox Game Studios"
     - "Activision"
     - "Blizzard Entertainment"
@@ -130,6 +132,7 @@ umbrales:
     - "Sega"
     - "Konami"
     - "Warner Bros. Games"
+    - "Warner Bros. Interactive Entertainment"
     - "Tencent"
     - "Nexon"
     - "NetEase Games"
@@ -137,4 +140,27 @@ umbrales:
     - "Epic Games"
     - "Riot Games"
     - "CD Projekt"
+    - "CD Projekt RED"
     - "Krafton"
+    - "THQ Nordic"
+    - "Embracer Group"
+    - "Deep Silver"
+    - "Koch Media"
+    - "Plaion"
+    - "Paradox Interactive"
+    - "Atari"
+    - "Focus Entertainment"
+    - "Focus Home Interactive"
+    - "Gearbox Publishing"
+    - "Team17"
+    - "Amazon Games"
+    - "Koei Tecmo"
+    - "Koei Tecmo Games"
+    - "Level Infinite"
+    - "Pearl Abyss"
+    - "Smilegate"
+    - "Spike Chunsoft"
+    - "D3PUBLISHER"
+    - "Gameloft"
+    - "Strategy First"
+
