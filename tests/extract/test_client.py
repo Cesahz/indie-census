@@ -69,12 +69,12 @@ def test_get_app_details_exitoso() -> None:
 
 
 def test_get_app_reviews_summary_exitoso() -> None:
-    #obtener resumen de resenas existente con respuesta 200 valida
+    #obtener resumen de resenas existente con respuesta 200 valida y language=all
     fixture = _cargar_fixture("appreviews_success_1809540.json")
     mock_session = MagicMock(spec=requests.Session)
     mock_session.get.return_value = DummyResponse(status_code=200, json_data=fixture)
 
-    cliente = SteamClient(session=mock_session)
+    cliente = SteamClient(api_key="", session=mock_session)
     resultado = cliente.get_app_reviews_summary(1809540)
 
     assert resultado == fixture
@@ -82,6 +82,36 @@ def test_get_app_reviews_summary_exitoso() -> None:
     llamada_url = mock_session.get.call_args[0][0]
     assert "1809540" in llamada_url
     assert "json=1" in llamada_url
+    assert "language=all" in llamada_url
+
+
+def test_get_app_reviews_summary_con_api_key_consulta_iuserreviews() -> None:
+    #cuando api_key esta presente se consulta IUserReviewsService de webapi
+    payload_webapi = {
+        "response": {
+            "query_summary": {
+                "num_reviews": 0,
+                "review_score": 9,
+                "total_positive": 1500,
+                "total_negative": 50,
+                "total_reviews": 1550,
+            }
+        }
+    }
+    mock_session = MagicMock(spec=requests.Session)
+    mock_session.get.return_value = DummyResponse(status_code=200, json_data=payload_webapi)
+
+    cliente = SteamClient(api_key="TEST_KEY_123", session=mock_session)
+    resultado = cliente.get_app_reviews_summary(1809540)
+
+    assert resultado["success"] == 1
+    assert resultado["query_summary"]["total_reviews"] == 1550
+    mock_session.get.assert_called_once()
+    llamada_url = mock_session.get.call_args[0][0]
+    assert "IUserReviewsService/GetAppReviews/v1" in llamada_url
+    assert "key=TEST_KEY_123" in llamada_url
+    assert "appid=1809540" in llamada_url
+
 
 
 # ---------------------------------------------------------------------------

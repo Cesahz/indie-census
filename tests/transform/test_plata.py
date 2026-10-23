@@ -240,6 +240,18 @@ def test_parsear_appdetails_generos_e_idiomas() -> None:
     assert fila["language_count"] == 3
 
 
+def test_parsear_appdetails_extrae_categories() -> None:
+    #extraer categorias formales de tienda desde el campo categories
+    payload = _payload_details(81)
+    payload["81"]["data"]["categories"] = [
+        {"id": 2, "description": "Single-player"},
+        {"id": 1, "description": "Multi-player"},
+    ]
+    fila = parsear_appdetails(_envoltorio("steam.appdetails", payload), 81)
+    assert fila["_categories"] == ["Single-player", "Multi-player"]
+
+
+
 def test_parsear_appdetails_fecha_no_parseable_retorna_none() -> None:
     payload = _payload_details(9, fecha="Coming soon")
     assert parsear_appdetails(_envoltorio("steam.appdetails", payload), 9)["release_date"] is None
@@ -455,3 +467,25 @@ def test_ejecutar_transformacion_plata_invoca_validador_antes_de_persistir(escen
         )
     assert recibido["filas"] == (3, 3)
     assert not (escenario["base"] / "plata").exists()
+
+
+def test_construir_tablas_calcula_y_pasa_titulos_del_publisher(tmp_path: Path) -> None:
+    #verificar que el conteo consolidado de titulos por publisher se calcula y penaliza catalogos grandes
+    fecha = "2026-10-01"
+    #crear 7 juegos del mismo publisher 'MegaCorp Indie'
+    appids = list(range(901, 908))
+    juegos_man = []
+    for aid in appids:
+        payload = _payload_details(aid, nombre=f"Juego {aid}", precio=999, generos=["Indie"])
+        payload[str(aid)]["data"]["publishers"] = ["MegaCorp Indie"]
+        payload[str(aid)]["data"]["developers"] = ["MegaCorp Indie"]
+        _poblar_bronce(tmp_path, aid, payload, _payload_reviews(10, 1), fecha=fecha)
+        juegos_man.append({"appid": aid, "grupo": "general", "titulo": f"Juego {aid}", "release_date": "2024-05-29"})
+
+    manifiesto = _escribir_manifiesto(tmp_path / "muestra_pubs.yaml", juegos_man)
+    dim, _ = construir_tablas_plata(tmp_path, manifiesto, fecha=fecha)
+    filas = dim.to_pylist()
+    #con 7 titulos excede max_titulos_publisher_pequeno (5)
+    for fila in filas:
+        assert fila["indie_score"] < 0.85
+
