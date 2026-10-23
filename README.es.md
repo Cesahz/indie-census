@@ -9,9 +9,9 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)
 
-Observatorio de datos abiertos y Lakehouse analítico del ecosistema de desarrollo de videojuegos independiente en Steam.
+Observatorio abierto de datos del ecosistema de desarrollo de videojuegos independiente.
 
-> **Estado del proyecto:** En desarrollo activo (`v0.3.4`). Construido bajo desarrollo guiado por pruebas (TDD) estricto, suites herméticas sin llamadas a la red, contratos de calidad de datos tipados y arquitectura local-first.
+> **Estado del proyecto:** En desarrollo activo (`v0.3.4`). Este es un proyecto personal que se construye de forma pausada y metódica, priorizando la solidez de la ingeniería de software y el rigor analítico. Todo módulo se diseña bajo desarrollo guiado por pruebas (TDD), con suites de pruebas herméticas (sin llamadas a la red ni aleatoriedad no controlada), tipado estricto y contratos de datos inmutables antes de cada implementación.
 
 ## Visión General y Áreas de Enfoque
 

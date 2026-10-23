@@ -9,9 +9,9 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)
 
-Open data observatory and analytical Lakehouse for the independent video game development ecosystem on Steam.
+Open data observatory of the independent game development ecosystem.
 
-> **Status:** Active development (`v0.3.4`). Built under strict Test-Driven Development (TDD), hermetic test suites isolated from network calls, typed data contracts, and local-first architecture.
+> **Project Status:** Under active development (`v0.3.4`). This is a personal project being built steadily and methodically, prioritizing software engineering robustness and analytical rigor over speed. Every module is built following Test-Driven Development (TDD), with hermetic test suites (no external network calls or uncontrolled randomness), strict typing, and immutable data contracts defined before implementation.
 
 ## Overview and Focus Areas
 
