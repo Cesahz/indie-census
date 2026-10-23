@@ -3,7 +3,7 @@
 [Read in English](README.md) · [Leer en español](README.es.md)
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-376%20passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-383%20passed-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen.svg)
 ![Architecture](https://img.shields.io/badge/architecture-Data%20Lakehouse-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -50,7 +50,7 @@ The platform follows a three-tier Data Lakehouse architecture (Bronze, Silver, G
 - **Phase 2 — Deterministic Classification & Semantic Enrichment (`v0.2.0`):** Multi-tier game engine classifier (evidence levels 1-4), multi-dimensional indie authenticity scoring algorithm with major publisher exclusion, formal generative AI disclosure classifier, and initial Gold Star Schema.
 - **Phase 3 — Massive Ingestion & Boxleiter Commercial Metrics (`v0.3.0`):** Batch discovery via authenticated `IStoreService/GetAppList`, resilient console progress bar with dynamic ETA, multi-era Boxleiter sales and net revenue modeling, and data cleansing for delisted items.
 - **Phase 3 Extension — Distributed Multi-Node Sharding & Telemetry (`v0.3.1`):** Deterministic modular AppID sharding across distributed workers (Local PC and Google Colab Pro), immutable master manifest freezing, periodic tar.gz snapshot synchronization, and per-node telemetry benchmark collector.
-- **Phase 3 Extension — Zero-Gap Reconciliation & Pre-Silver Audit (`v0.3.2`):** Zero-gap atomic snapshot merger, 100% catalog completeness audit against master manifest with residual fallback sweep, blocking Contract 10 pre-Silver verification, and consolidation of **60,899 titles (55,786 confirmed indies representing $7.006B USD net developer revenue and $15.121B USD total)** in the Gold Data Mart (`data/oro/indie_census_mart.db`).
+- **Phase 3 Extension — Zero-Gap Reconciliation & Pre-Silver Audit (`v0.3.2`):** Zero-gap atomic snapshot merger, 100% catalog completeness audit against master manifest with residual fallback sweep, blocking Contract 10 pre-Silver verification, and consolidation of **63,770 titles (57,011 confirmed indies representing $7.120B USD net developer revenue and $15.197B USD total)** in the Gold Data Mart (`data/oro/indie_census_mart.db`).
 - **Phase 4 — Gold Analytical Mart, CI Automation & Open Dataset (`v0.4.0`, upcoming):** Aggregated Gold master tables (engine penetration, price distribution, saturation indices), secondary community tags enrichment to unlock Level 2 engine classification, automated GitHub Actions Cron execution, public open dataset release (Parquet/CSV with `metodologia.md`, `diccionario_datos.md`, `limitaciones.md`), and the Strategic Control Milestone (12.1.1).
 - **Phase 5 — Applied Data Science & Predictive Commercial Viability Core (`v0.5.0`):** Empirical sales and pricing regression models, launch window competition density metrics, and underserved niche gap detection.
 - **Phase 6 — Headless Executive Audit Reporter & Diagnostic Microservice (`v1.0.0`):** Automated headless PDF/JSON audit report generation and decoupled diagnostic service.
@@ -109,7 +109,7 @@ Discovers, extracts, normalizes, and derives commercial revenue metrics for larg
 # Discover and ingest catalog titles, generating the SQLite Data Mart
 python -m src.pipeline --modo masivo --descubrir --max-juegos 6000 --generar-oro
 
-# Reprocess existing local Bronze partitions without network calls (60,899 titles)
+# Reprocess existing local Bronze partitions without network calls (63,770 titles)
 python -m src.pipeline --modo masivo --omitir-extraccion --generar-oro --fecha 2026-10-18
 ```
 

@@ -3,7 +3,7 @@
 [Read in English](README.md) · [Leer en español](README.es.md)
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-376%20passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-383%20passed-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen.svg)
 ![Architecture](https://img.shields.io/badge/architecture-Data%20Lakehouse-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -50,7 +50,7 @@ La plataforma implementa una arquitectura Data Lakehouse de tres capas (Bronce, 
 - **Fase 2 — Clasificación Determinista y Enriquecimiento Semántico (`v0.2.0`):** Clasificador jerárquico de motores (niveles de evidencia 1-4), algoritmo multidimensional de autenticidad indie con exclusión de grandes corporaciones, detector formal de divulgación de IA y Star Schema analítico inicial.
 - **Fase 3 — Ingesta Masiva y Métricas Comerciales (`v0.3.0`):** Descubrimiento por lotes vía `IStoreService/GetAppList`, barra visual interactiva en consola con cálculo dinámico de ETA, modelo de ventas y recaudación neta Boxleiter multi-era, y saneamiento de datos preventivo para títulos retirados.
 - **Extensión de Fase 3 — Sharding Distribuido Multi-Nodo y Telemetría (`v0.3.1`):** Sharding modular determinista por AppID entre nodos de cómputo (PC Local y Google Colab Pro), congelación de manifiesto maestro inmutable, empaquetado periódico de snapshots tar.gz y colector de telemetría y benchmark por nodo.
-- **Extensión de Fase 3 — Reconciliación Cero-Huecos y Auditoría Pre-Plata (`v0.3.2`):** Unificador atómico de snapshots sin huecos, auditoría de completitud al 100% contra el manifiesto maestro con barrido residual tolerante a fallos, Contrato 10 bloqueante de verificación criptográfica y consolidación de **60.899 títulos (55.786 indies auténticos que representan $7.006 millones de USD netos y $15.121 millones totales)** en el Data Mart analítico de la capa Oro (`data/oro/indie_census_mart.db`).
+- **Extensión de Fase 3 — Reconciliación Cero-Huecos y Auditoría Pre-Plata (`v0.3.2`):** Unificador atómico de snapshots sin huecos, auditoría de completitud al 100% contra el manifiesto maestro con barrido residual tolerante a fallos, Contrato 10 bloqueante de verificación criptográfica y consolidación de **63.770 títulos (57.011 indies auténticos que representan $7.120 millones de USD netos y $15.197 millones totales)** en el Data Mart analítico de la capa Oro (`data/oro/indie_census_mart.db`).
 - **Fase 4 — Capa Oro Analítica, Automatización en CI y Dataset Abierto (`v0.4.0`, próxima fase):** Tablas maestras agregadas de la capa Oro (penetración de motores, distribución de precios, métricas de saturación), enriquecimiento secundario de tags comunitarios de tienda para clasificación de motores Nivel 2, automatización periódica en GitHub Actions Cron, publicación del dataset abierto (Parquet/CSV con `metodologia.md`, `diccionario_datos.md`, `limitaciones.md`) y el Hito de Control Estratégico (12.1.1).
 - **Fase 5 — Data Science Aplicada y Motor de Viabilidad Comercial (`v0.5.0`):** Modelos predictivos de regresión y pricing de ventas, densidad competitiva en ventanas de lanzamiento y detección algorítmica de nichos desatendidos.
 - **Fase 6 — Reportes Ejecutivos Headless y Micro-Servicio de Diagnóstico (`v1.0.0`):** Generador desatendido de informes de auditoría ejecutiva exportables en PDF y JSON y micro-servicio desacoplado de diagnóstico.
@@ -109,7 +109,7 @@ Descubre, extrae, normaliza y calcula métricas comerciales para subconjuntos ex
 # Descubrir e ingerir títulos del catálogo generando el Data Mart analítico
 python -m src.pipeline --modo masivo --descubrir --max-juegos 6000 --generar-oro
 
-# Reprocesar particiones locales existentes en Bronce sin llamadas a la red (60.899 títulos)
+# Reprocesar particiones locales existentes en Bronce sin llamadas a la red (63.770 títulos)
 python -m src.pipeline --modo masivo --omitir-extraccion --generar-oro --fecha 2026-10-18
 ```
 
