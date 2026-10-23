@@ -13,7 +13,7 @@ Observatorio abierto de datos del ecosistema de desarrollo de videojuegos indepe
 
 ---
 
-> **Estado del proyecto:** En desarrollo activo (`v0.3.3`). Este es un proyecto personal que se construye de forma pausada y metódica, priorizando la solidez de la ingeniería de software y el rigor analítico. Todo módulo se diseña bajo desarrollo guiado por pruebas (TDD), con suites de pruebas herméticas (sin llamadas a la red ni aleatoriedad no controlada), tipado estricto y contratos de datos inmutables antes de cada implementación.
+> **Estado del proyecto:** En desarrollo activo (`v0.3.4`). Este es un proyecto personal que se construye de forma pausada y metódica, priorizando la solidez de la ingeniería de software y el rigor analítico. Todo módulo se diseña bajo desarrollo guiado por pruebas (TDD), con suites de pruebas herméticas (sin llamadas a la red ni aleatoriedad no controlada), tipado estricto y contratos de datos inmutables antes de cada implementación.
 
 ---
 

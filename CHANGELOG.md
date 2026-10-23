@@ -8,6 +8,20 @@
 - publicacion del dataset abierto en parquet y csv con metodologia, diccionario y limitaciones (fase 4)
 - enriquecimiento de etiquetas comunitarias de tienda mediante dataset externo para clasificacion de motores nivel 2
 
+## [0.3.4] - 2026-10-23
+
+### corregido
+
+- agregacion de catalogo y paso de titulos del publisher en capa plata para descalificar catalogos masivos (src/transform/plata.py)
+- combinacion de categorias de tienda con generos en etiquetas de clasificacion para deteccion completa de motores (src/transform/plata.py)
+- consulta prioritaria a getappreviews con lenguaje global all eliminando sesgo geografico de estimacion de ventas (src/extract/client.py)
+- normalizacion de lenguaje a all en ingesta masiva y propagacion de appids objetivo en orquestador (src/extract/pipeline.py, src/pipeline.py)
+
+### cambiado
+
+- recalibracion de formula de indie score con umbral mediano de 25 titulos para distribuidores masivos y pesos balanceados (src/classify/indie.py)
+- ampliacion de lista de exclusion corporativa con 26 nuevos conglomerados y subsidiarias (config/taxonomy.yaml)
+
 ## [0.3.3] - 2026-10-20
 
 ### corregido

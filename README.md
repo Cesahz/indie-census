@@ -13,7 +13,7 @@ Open data observatory of the independent game development ecosystem.
 
 ---
 
-> **Project Status:** Under active development (`v0.3.3`). This is a personal project being built steadily and methodically, prioritizing software engineering robustness and analytical rigor over speed. Every module is built following Test-Driven Development (TDD), with hermetic test suites (no external network calls or uncontrolled randomness), strict typing, and immutable data contracts defined before implementation.
+> **Project Status:** Under active development (`v0.3.4`). This is a personal project being built steadily and methodically, prioritizing software engineering robustness and analytical rigor over speed. Every module is built following Test-Driven Development (TDD), with hermetic test suites (no external network calls or uncontrolled randomness), strict typing, and immutable data contracts defined before implementation.
 
 ---
 
