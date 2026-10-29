@@ -19,6 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # ---------------------------------------------------------------------------
 
 DIRECTORIOS_CANONICOS = [
+    "adr",
     "benchmarks",
     "config",
     "src",
@@ -42,6 +43,7 @@ DIRECTORIOS_CANONICOS = [
 ]
 
 ARCHIVOS_CANONICOS = [
+    "adr/README.md",
     "CHANGELOG.md",
     "README.md",
     "README.es.md",

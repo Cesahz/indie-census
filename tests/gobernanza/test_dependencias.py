@@ -185,3 +185,33 @@ def test_ci_instala_requirements_dev_y_exige_umbral_cobertura_real() -> None:
     #validar que el yaml de ci es sintacticamente valido
     datos_ci = yaml.safe_load(texto_ci)
     assert isinstance(datos_ci, dict), "ci.yml no es un documento yaml valido"
+
+
+def test_registros_adr_publicos_existen_y_cumplen_estructura() -> None:
+    """Verificar que el directorio publico adr/ contiene decisiones numeradas con estructura formal."""
+    dir_adr = REPO_ROOT / "adr"
+    assert dir_adr.is_dir(), "Directorio publico adr/ ausente en la raiz del repositorio"
+    assert (dir_adr / "README.md").is_file(), "Indice adr/README.md ausente"
+
+    archivos_adr = sorted(dir_adr.glob("[0-9][0-9][0-9][0-9]-*.md"))
+    assert len(archivos_adr) >= 5, (
+        f"Se esperaban al menos 5 registros ADR publicos en adr/, se encontraron: {len(archivos_adr)}"
+    )
+
+    secciones_obligatorias = [
+        "## Contexto y Problema",
+        "## Alternativas Consideradas",
+        "## Decisión",
+        "## Consecuencias y Costos Aceptados",
+    ]
+    for idx, ruta_adr in enumerate(archivos_adr, start=1):
+        prefijo_esperado = f"{idx:04d}-"
+        assert ruta_adr.name.startswith(prefijo_esperado), (
+            f"Numeracion secuencial rota en adr/: se esperaba prefijo {prefijo_esperado}, "
+            f"se encontro {ruta_adr.name}"
+        )
+        contenido = ruta_adr.read_text(encoding="utf-8")
+        for seccion in secciones_obligatorias:
+            assert seccion in contenido, (
+                f"El registro {ruta_adr.name} no contiene la seccion obligatoria {seccion!r}"
+            )
