@@ -8,6 +8,21 @@
 - publicacion del dataset abierto en parquet y csv con metodologia, diccionario y limitaciones (fase 4)
 - enriquecimiento de etiquetas comunitarias de tienda mediante dataset externo para clasificacion de motores nivel 2
 
+## [0.3.5] - 2026-10-29
+
+### agregado
+
+- separacion estricta entre dependencias de produccion y de desarrollo con pyproject toml y requirements dev txt
+- suite automatizada de contrato de dependencias con escaneo ast de imports no declarados (tests/gobernanza/test_dependencias.py)
+
+### cambiado
+
+- umbral de cobertura de pruebas en integracion continua elevado a noventa por ciento en ci yml
+
+### corregido
+
+- regeneracion de capa plata y capa oro con 63764 resenas globales multilingues eliminando sesgo geografico en estimacion boxleiter
+
 ## [0.3.4] - 2026-10-23
 
 ### corregido
