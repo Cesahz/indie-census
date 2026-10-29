@@ -14,6 +14,7 @@
 
 - separacion estricta entre dependencias de produccion y de desarrollo con pyproject toml y requirements dev txt
 - suite automatizada de contrato de dependencias con escaneo ast de imports no declarados (tests/gobernanza/test_dependencias.py)
+- directorio publico de registros de decisiones de arquitectura numerados e inmutables (adr/)
 
 ### cambiado
 
