@@ -11,6 +11,7 @@ from typing import Any, Optional
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from src.quality.contratos_oro import validar_continuidad_temporal_oro, validar_rango_historico_3sigma
 from src.version import PIPELINE_VERSION
 
 #rutas canonicas por defecto del repositorio
@@ -311,3 +312,59 @@ def persistir_tablas_oro_agregadas_sqlite(
         con.commit()
     finally:
         con.close()
+
+
+def ejecutar_transformacion_oro_agregados(
+    ruta_oro: Optional[Path] = None,
+    fecha_inicio: date = date(2024, 1, 1),
+    fecha_corte: Optional[date] = None,
+    ruta_db: Optional[Path] = None,
+    version_pipeline: Optional[str] = None,
+    validar_contratos: bool = True,
+    umbral_sigma: float = 3.0,
+    hitos_verificados: Optional[set[str]] = None,
+    bloquear_solo_caidas: bool = True,
+) -> dict[str, Any]:
+    """Cargar star schema de oro, construir tablas agregadas, validar contratos y persistir."""
+    base_oro = Path(ruta_oro) if ruta_oro is not None else RUTA_DATA_DEFAULT / "oro" / "mart"
+    db_path = Path(ruta_db) if ruta_db is not None else RUTA_DATA_DEFAULT / "oro" / "indie_census_mart.db"
+    corte = fecha_corte if fecha_corte is not None else date(2026, 10, 1)
+
+    tablas_estrella = {
+        "dim_game": pq.read_table(base_oro / "dim_game.parquet"),
+        "dim_date": pq.read_table(base_oro / "dim_date.parquet"),
+        "dim_genre_bridge": pq.read_table(base_oro / "dim_genre_bridge.parquet"),
+        "fact_game_performance": pq.read_table(base_oro / "fact_game_performance.parquet"),
+    }
+
+    tablas_agregadas = construir_tablas_oro_agregadas(
+        tablas_estrella=tablas_estrella,
+        fecha_inicio=fecha_inicio,
+        fecha_corte=corte,
+        version_pipeline=version_pipeline,
+    )
+
+    if validar_contratos:
+        engine_monthly = tablas_agregadas["gold_engine_adoption_monthly"]
+        mes_ini_str = f"{fecha_inicio.year:04d}-{fecha_inicio.month:02d}"
+        mes_corte_str = f"{corte.year:04d}-{corte.month:02d}"
+        validar_continuidad_temporal_oro(engine_monthly, mes_inicio=mes_ini_str, mes_corte=mes_corte_str)
+        validar_rango_historico_3sigma(
+            engine_monthly,
+            ventana_meses=12,
+            umbral_sigma=umbral_sigma,
+            hitos_verificados=hitos_verificados,
+            bloquear_solo_caidas=bloquear_solo_caidas,
+        )
+
+    rutas_parquet = persistir_tablas_oro_agregadas_parquet(tablas_agregadas, ruta_oro=base_oro)
+    persistir_tablas_oro_agregadas_sqlite(tablas_agregadas, ruta_db=db_path)
+
+    return {
+        "tablas_agregadas": list(tablas_agregadas.keys()),
+        "rutas_parquet": {k: str(v) for k, v in rutas_parquet.items()},
+        "ruta_db": str(db_path),
+        "filas_engine_monthly": tablas_agregadas["gold_engine_adoption_monthly"].num_rows,
+        "filas_pricing_genre": tablas_agregadas["gold_pricing_by_genre"].num_rows,
+        "filas_saturation_monthly": tablas_agregadas["gold_market_saturation_monthly"].num_rows,
+    }

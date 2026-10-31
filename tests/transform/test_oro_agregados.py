@@ -17,6 +17,7 @@ from src.transform.oro_agregados import (
     ESQUEMA_GOLD_PRICING_GENRE,
     ESQUEMA_GOLD_SATURATION_MONTHLY,
     construir_tablas_oro_agregadas,
+    ejecutar_transformacion_oro_agregados,
     persistir_tablas_oro_agregadas_parquet,
     persistir_tablas_oro_agregadas_sqlite,
 )
@@ -203,3 +204,28 @@ def test_persistir_tablas_oro_agregadas_parquet_y_sqlite(tmp_path: Path) -> None
     assert "gold_engine_adoption_monthly" in nombres_tablas
     assert "gold_pricing_by_genre" in nombres_tablas
     assert "gold_market_saturation_monthly" in nombres_tablas
+
+
+def test_ejecutar_transformacion_oro_agregados(tmp_path: Path) -> None:
+    """Verificar orquestacion completa de transformacion, validacion y persistencia."""
+    star = _crear_star_schema_sintetico()
+    dir_mart = tmp_path / "mart"
+    dir_mart.mkdir(parents=True)
+    for nom, tabla in star.items():
+        pq.write_table(tabla, dir_mart / f"{nom}.parquet")
+
+    ruta_db = tmp_path / "indie_census_mart.db"
+    res = ejecutar_transformacion_oro_agregados(
+        ruta_oro=dir_mart,
+        fecha_inicio=date(2024, 2, 1),
+        fecha_corte=date(2024, 3, 31),
+        ruta_db=ruta_db,
+        validar_contratos=False,
+    )
+
+    assert "gold_engine_adoption_monthly" in res["tablas_agregadas"]
+    assert res["filas_engine_monthly"] > 0
+    assert res["filas_pricing_genre"] > 0
+    assert res["filas_saturation_monthly"] > 0
+    assert Path(res["rutas_parquet"]["gold_engine_adoption_monthly"]).exists()
+    assert ruta_db.exists()

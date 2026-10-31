@@ -2,6 +2,7 @@
 #valida continuidad temporal estricta y control de bandas 3-sigma
 import math
 from collections import defaultdict
+from typing import Optional
 
 import pyarrow as pa
 
@@ -56,6 +57,8 @@ def validar_rango_historico_3sigma(
     engine_monthly: pa.Table,
     ventana_meses: int = 12,
     umbral_sigma: float = 3.0,
+    hitos_verificados: Optional[set[str]] = None,
+    bloquear_solo_caidas: bool = False,
 ) -> None:
     """Verificar que los conteos mensuales totales no caigan a cero ni violen 3 desviaciones estandar."""
     filas = engine_monthly.to_pylist()
@@ -64,9 +67,13 @@ def validar_rango_historico_3sigma(
         ym = str(fila.get("year_month", ""))
         conteos_por_mes[ym] += int(fila.get("releases_count", 0))
 
+    verificados = hitos_verificados or set()
     meses_ordenados = sorted(conteos_por_mes.keys())
     for i in range(ventana_meses, len(meses_ordenados)):
         mes_actual = meses_ordenados[i]
+        if mes_actual in verificados:
+            continue
+
         conteo_actual = conteos_por_mes[mes_actual]
 
         if conteo_actual <= 0:
@@ -78,6 +85,9 @@ def validar_rango_historico_3sigma(
         media = sum(ventana) / len(ventana)
         varianza = sum((x - media) ** 2 for x in ventana) / len(ventana)
         sigma = math.sqrt(varianza)
+
+        if bloquear_solo_caidas and conteo_actual >= media:
+            continue
 
         sigma_efectiva = max(sigma, 1.0)
         desviacion = abs(conteo_actual - media) / sigma_efectiva
