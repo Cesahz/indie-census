@@ -1,0 +1,26 @@
+{
+  "fecha_medicion": "2026-10-31T01:22:00.844776+00:00",
+  "version_pipeline": "0.3.5",
+  "tamano_muestra_juegos": 1000,
+  "perfil_hardware": {
+    "hilos_logicos_detectados": 12,
+    "categoria_hardware": "multiproceso_alto_rendimiento",
+    "workers_asignados": 10,
+    "batch_size": 5000
+  },
+  "antes_ansioso_monohilo": {
+    "duracion_segundos": 2.266,
+    "juegos_por_segundo": 441.3,
+    "pico_ram_mb": 25.56
+  },
+  "despues_streaming_adaptativo": {
+    "duracion_segundos": 1.172,
+    "juegos_por_segundo": 853.5,
+    "pico_ram_mb": 3.02
+  },
+  "mejora_relativa": {
+    "speedup_velocidad_x": 1.93,
+    "reduccion_ram_porcentaje": 88.18,
+    "equivalencia_exacta_filas": true
+  }
+}

@@ -452,6 +452,8 @@ def construir_tablas_plata(
     modo: str = "control",
     appids_objetivo: Optional[list[int]] = None,
     perfil_hardware: Optional[PerfilHardware] = None,
+    rutas_detalles_indexadas: Optional[dict[int, Path]] = None,
+    rutas_resenas_indexadas: Optional[dict[int, Path]] = None,
 ) -> tuple[pa.Table, pa.Table]:
     """Construir las tablas arrow dim_game y game_review_summary a partir de bronce.
     En modo 'control', lee la muestra definida en el manifiesto yaml.
@@ -464,8 +466,16 @@ def construir_tablas_plata(
     version = version_pipeline if version_pipeline is not None else PIPELINE_VERSION
     perfil = perfil_hardware or detectar_perfil_hardware()
 
-    rutas_detalles = indexar_rutas_bronce(base, "appdetails", fecha)
-    rutas_resenas = indexar_rutas_bronce(base, "appreviews_resumen", fecha)
+    rutas_detalles = (
+        rutas_detalles_indexadas
+        if rutas_detalles_indexadas is not None
+        else indexar_rutas_bronce(base, "appdetails", fecha)
+    )
+    rutas_resenas = (
+        rutas_resenas_indexadas
+        if rutas_resenas_indexadas is not None
+        else indexar_rutas_bronce(base, "appreviews_resumen", fecha)
+    )
 
     #determinar universo de items segun modo
     if modo == "masivo":
@@ -484,7 +494,10 @@ def construir_tablas_plata(
         )
 
     #construir lotes de items emparejados con sus rutas de bronce
-    tamano_lote = max(1, perfil.batch_size)
+    if perfil.usar_multiproceso and len(items) > 100:
+        tamano_lote = min(perfil.batch_size, max(50, len(items) // (perfil.workers_asignados * 2)))
+    else:
+        tamano_lote = max(1, perfil.batch_size)
     lotes: list[list[tuple[dict[str, Any], Optional[Path], Optional[Path]]]] = []
     for i in range(0, len(items), tamano_lote):
         chunk = items[i : i + tamano_lote]
@@ -618,6 +631,8 @@ def ejecutar_transformacion_plata(
     modo: str = "control",
     appids_objetivo: Optional[list[int]] = None,
     perfil_hardware: Optional[PerfilHardware] = None,
+    rutas_detalles_indexadas: Optional[dict[int, Path]] = None,
+    rutas_resenas_indexadas: Optional[dict[int, Path]] = None,
 ) -> dict[str, Any]:
     """Construir, validar opcionalmente y persistir la capa plata.
     El validador se ejecuta en memoria antes de cualquier escritura: si lanza una excepcion,
@@ -633,6 +648,8 @@ def ejecutar_transformacion_plata(
         modo=modo,
         appids_objetivo=appids_objetivo,
         perfil_hardware=perfil_hardware,
+        rutas_detalles_indexadas=rutas_detalles_indexadas,
+        rutas_resenas_indexadas=rutas_resenas_indexadas,
     )
     if validador is not None:
         validador(dim_game, resumen)

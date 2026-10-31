@@ -76,12 +76,15 @@ def ejecutar_benchmark_transformacion(
     #fase antes: ejecucion mono-hilo
     gc.collect()
     tracemalloc.start()
+    tracemalloc.reset_peak()
     t0 = time.perf_counter()
     dim_antes, res_antes = construir_tablas_plata(
         ruta_base=ruta_base,
         modo="masivo",
         appids_objetivo=appids_muestra,
         perfil_hardware=perfil_secuencial,
+        rutas_detalles_indexadas=rutas_det,
+        rutas_resenas_indexadas=rutas_res,
     )
     t1 = time.perf_counter()
     _, peak_antes = tracemalloc.get_traced_memory()
@@ -94,12 +97,15 @@ def ejecutar_benchmark_transformacion(
     #fase despues: ejecucion streaming adaptativo
     gc.collect()
     tracemalloc.start()
+    tracemalloc.reset_peak()
     t2 = time.perf_counter()
     dim_despues, res_despues = construir_tablas_plata(
         ruta_base=ruta_base,
         modo="masivo",
         appids_objetivo=appids_muestra,
         perfil_hardware=perfil_adaptativo,
+        rutas_detalles_indexadas=rutas_det,
+        rutas_resenas_indexadas=rutas_res,
     )
     t3 = time.perf_counter()
     _, peak_despues = tracemalloc.get_traced_memory()
