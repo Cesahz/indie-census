@@ -8,6 +8,20 @@
 - publicacion del dataset abierto en parquet y csv con metodologia, diccionario y limitaciones (fase 4)
 - enriquecimiento de etiquetas comunitarias de tienda mediante dataset externo para clasificacion de motores nivel 2
 
+## [0.3.6] - 2026-10-30
+
+### agregado
+
+- perfil de hardware adaptativo para asignacion optima de workers segun nucleos del procesador (src/transform/plata.py)
+- modulo de benchmarking comparativo con medicion de tiempo de pared, throughput y pico de ram (src/analysis/benchmark_transformacion.py)
+- reporte publico comparativo antes vs despues en markdown y json (benchmarks/)
+- suite de pruebas de optimizacion y equivalencia matematica estricta en arrow (tests/transform/test_plata_optimizacion.py, tests/analysis/test_benchmark_transformacion.py)
+
+### cambiado
+
+- motor de transformacion bronce a plata con streaming de record batches en memoria acotada (src/transform/plata.py)
+- indexacion ligera de rutas en bronce sin lectura ansiosa de payloads json reduciendo consumo de ram en ochenta y ocho por ciento (src/transform/plata.py)
+
 ## [0.3.5] - 2026-10-29
 
 ### agregado
