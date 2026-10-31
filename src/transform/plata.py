@@ -4,6 +4,7 @@ import json
 import os
 import re
 from collections import Counter
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -59,6 +60,61 @@ ESQUEMA_GAME_REVIEW_SUMMARY = pa.schema([
     pa.field("extracted_at", pa.string()),
     pa.field("pipeline_version", pa.string()),
 ])
+
+@dataclass(frozen=True)
+class PerfilHardware:
+    """Configuracion de ejecucion adaptada a la capacidad del procesador."""
+
+    hilos_logicos_detectados: int
+    categoria_hardware: str
+    workers_asignados: int
+    usar_multiproceso: bool
+    batch_size: int
+
+
+def detectar_perfil_hardware(
+    hilos_override: Optional[int] = None,
+    max_workers_techo: int = 12,
+) -> PerfilHardware:
+    """Calcular perfil optimo de workers y tamano de lote segun los hilos del procesador."""
+    if max_workers_techo < 1:
+        raise ValueError("El techo maximo de workers debe ser al menos 1.")
+
+    hilos = hilos_override if hilos_override is not None else (os.cpu_count() or 1)
+    if hilos < 1:
+        hilos = 1
+
+    #gama baja: mono-hilo o dual-core sin sobrecosto de multiproceso
+    if hilos <= 2:
+        return PerfilHardware(
+            hilos_logicos_detectados=hilos,
+            categoria_hardware="gama_baja_secuencial",
+            workers_asignados=1,
+            usar_multiproceso=False,
+            batch_size=1500,
+        )
+
+    #gama media: 3 a 6 hilos logicos
+    if hilos <= 6:
+        workers = min(max(2, hilos - 1), max_workers_techo)
+        return PerfilHardware(
+            hilos_logicos_detectados=hilos,
+            categoria_hardware="gama_media_moderada",
+            workers_asignados=workers,
+            usar_multiproceso=True,
+            batch_size=3000,
+        )
+
+    #gama alta: 7 o mas hilos logicos (ej. ryzen 5 8600g con 12 hilos)
+    workers_alta = min(max(1, hilos - 2), max_workers_techo)
+    return PerfilHardware(
+        hilos_logicos_detectados=hilos,
+        categoria_hardware="multiproceso_alto_rendimiento",
+        workers_asignados=workers_alta,
+        usar_multiproceso=True,
+        batch_size=5000,
+    )
+
 
 #mapa de meses en ingles independiente del locale del sistema
 _MESES = {
@@ -205,6 +261,35 @@ def parsear_appreviews(envoltorio: dict[str, Any], appid: int) -> dict[str, Any]
         "total_reviews": total,
         "extracted_at": envoltorio.get("meta", {}).get("extraido_en"),
     }
+
+
+def indexar_rutas_bronce(
+    ruta_base: Path,
+    recurso: str,
+    fecha: Optional[str] = None,
+) -> dict[int, Path]:
+    """Indexar unicamente las rutas Path del archivo mas reciente por appid sin cargar json en ram.
+    Si no se especifica fecha, las particiones posteriores prevalecen ordenadas cronologicamente.
+    """
+    directorio = Path(ruta_base) / "bronce" / "steam" / recurso
+    if not directorio.is_dir():
+        return {}
+    if fecha is not None:
+        particiones = [directorio / f"fecha={fecha}"]
+    else:
+        particiones = sorted(p for p in directorio.glob("fecha=*") if p.is_dir())
+
+    indice: dict[int, Path] = {}
+    for particion in particiones:
+        if not particion.is_dir():
+            continue
+        for archivo in sorted(particion.glob("appid=*.json")):
+            try:
+                appid = int(archivo.stem.split("=", 1)[1])
+                indice[appid] = archivo
+            except (ValueError, IndexError):
+                continue
+    return indice
 
 
 def leer_particion_bronce(
