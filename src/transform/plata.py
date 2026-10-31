@@ -4,6 +4,7 @@ import json
 import os
 import re
 from collections import Counter
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -323,6 +324,126 @@ def _cargar_manifiesto(ruta_manifiesto: Path) -> list[dict[str, Any]]:
     return contenido.get("juegos", []) if isinstance(contenido, dict) else []
 
 
+_TAX_CACHE_LOCAL: Optional[Any] = None
+
+
+def _obtener_taxonomia_local() -> Any:
+    """Obtener o inicializar en cache la taxonomia en el proceso actual."""
+    global _TAX_CACHE_LOCAL
+    if _TAX_CACHE_LOCAL is None:
+        _TAX_CACHE_LOCAL = cargar_taxonomia()
+    return _TAX_CACHE_LOCAL
+
+
+def _procesar_elemento(
+    item: dict[str, Any],
+    ruta_detalles: Optional[Path],
+    ruta_resenas: Optional[Path],
+    modo: str,
+    tax_config: Any,
+) -> Optional[dict[str, Any]]:
+    """Procesar un juego individual desde sus rutas de bronce."""
+    if ruta_detalles is None or ruta_resenas is None:
+        return None
+
+    appid = int(item["appid"])
+    try:
+        raw_detalles = json.loads(ruta_detalles.read_text(encoding="utf-8"))
+        fila_dim = parsear_appdetails(raw_detalles, appid)
+        raw_resenas = json.loads(ruta_resenas.read_text(encoding="utf-8"))
+        fila_resena = parsear_appreviews(raw_resenas, appid)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return None
+
+    #enriquecimiento con el manifiesto curado como respaldo de titulo y fecha
+    fila_dim["title"] = fila_dim["title"] or item.get("titulo")
+    fila_dim["release_date"] = fila_dim["release_date"] or parsear_fecha_steam(
+        str(item["release_date"]) if item.get("release_date") is not None else None
+    )
+    fila_dim["group"] = item.get("grupo")
+
+    #en modo masivo se descartan productos sin fecha valida, fuera de catalogo, sin titulo o sin precio
+    if modo == "masivo":
+        if not fila_dim.get("release_date") or not fila_dim.get("title"):
+            return None
+        try:
+            f_obj = date.fromisoformat(str(fila_dim["release_date"]))
+            if not (FECHA_MINIMA_CATALOGO <= f_obj <= FECHA_MAXIMA_CATALOGO):
+                return None
+        except (ValueError, TypeError):
+            return None
+        if not fila_dim.get("is_free") and fila_dim.get("price_launch_usd_cents") is None:
+            return None
+
+    desc_texto = fila_dim.pop("_desc_texto", "")
+    descriptors = fila_dim.pop("_descriptors_steam", [])
+    categories = fila_dim.pop("_categories", [])
+
+    etiquetas_tienda = categories + [g for g in fila_dim["genres"] if g not in categories]
+
+    res_motor = clasificar_motor(
+        descripcion=desc_texto,
+        tags=etiquetas_tienda,
+        taxonomia=tax_config,
+    )
+
+    precio_usd = (
+        0.0 if fila_dim["is_free"]
+        else (fila_dim["price_launch_usd_cents"] / 100.0 if fila_dim["price_launch_usd_cents"] is not None else None)
+    )
+
+    res_ia = clasificar_divulgacion_ia(
+        descriptors_steam=descriptors,
+        tags=etiquetas_tienda,
+        descripcion_o_notas=desc_texto,
+        taxonomia=tax_config,
+    )
+
+    es_grupo_godot = item.get("grupo") == "godot"
+    if es_grupo_godot:
+        fila_dim["engine"] = "godot"
+        nivel = item.get("evidencia_nivel")
+        fila_dim["engine_evidence_level"] = int(nivel) if nivel is not None else (res_motor.evidence_level or 1)
+    else:
+        fila_dim["engine"] = res_motor.engine
+        fila_dim["engine_evidence_level"] = res_motor.evidence_level
+
+    fila_dim["ai_disclosure_level"] = res_ia.disclosure_level.value
+
+    #extraer lista de publishers para conteo global
+    publishers_limpios = [
+        p.strip().lower() for p in fila_dim.get("publishers", []) if p and p.strip()
+    ]
+
+    return {
+        "item": item,
+        "fila_dim": fila_dim,
+        "fila_resena": fila_resena,
+        "etiquetas_tienda": etiquetas_tienda,
+        "precio_usd": precio_usd,
+        "publishers_limpios": publishers_limpios,
+    }
+
+
+def _procesar_lote_trabajador(
+    lote_datos: list[tuple[dict[str, Any], Optional[Path], Optional[Path]]],
+    modo: str,
+) -> tuple[list[dict[str, Any]], Counter[str]]:
+    """Procesar un fragmento de juegos en un proceso trabajador sin saturar memoria."""
+    tax = _obtener_taxonomia_local()
+    resultados: list[dict[str, Any]] = []
+    conteo_local: Counter[str] = Counter()
+
+    for item, ruta_det, ruta_res in lote_datos:
+        res = _procesar_elemento(item, ruta_det, ruta_res, modo=modo, tax_config=tax)
+        if res is not None:
+            resultados.append(res)
+            for pub in res["publishers_limpios"]:
+                conteo_local[pub] += 1
+
+    return resultados, conteo_local
+
+
 def construir_tablas_plata(
     ruta_base: Optional[Path] = None,
     ruta_manifiesto: Optional[Path] = None,
@@ -330,6 +451,7 @@ def construir_tablas_plata(
     version_pipeline: Optional[str] = None,
     modo: str = "control",
     appids_objetivo: Optional[list[int]] = None,
+    perfil_hardware: Optional[PerfilHardware] = None,
 ) -> tuple[pa.Table, pa.Table]:
     """Construir las tablas arrow dim_game y game_review_summary a partir de bronce.
     En modo 'control', lee la muestra definida en el manifiesto yaml.
@@ -340,83 +462,63 @@ def construir_tablas_plata(
     base = Path(ruta_base) if ruta_base is not None else RUTA_DATA_DEFAULT
     ruta_man = Path(ruta_manifiesto) if ruta_manifiesto is not None else RUTA_MANIFIESTO_DEFAULT
     version = version_pipeline if version_pipeline is not None else PIPELINE_VERSION
+    perfil = perfil_hardware or detectar_perfil_hardware()
 
-    detalles = leer_particion_bronce(base, "appdetails", fecha)
-    resenas = leer_particion_bronce(base, "appreviews_resumen", fecha)
+    rutas_detalles = indexar_rutas_bronce(base, "appdetails", fecha)
+    rutas_resenas = indexar_rutas_bronce(base, "appreviews_resumen", fecha)
 
     #determinar universo de items segun modo
     if modo == "masivo":
         if appids_objetivo is not None:
-            candidatos = [int(a) for a in appids_objetivo if a in detalles and a in resenas]
+            candidatos = [int(a) for a in appids_objetivo if a in rutas_detalles and a in rutas_resenas]
         else:
-            candidatos = [aid for aid in sorted(detalles.keys()) if aid in resenas]
+            candidatos = [aid for aid in sorted(rutas_detalles.keys()) if aid in rutas_resenas]
         items = [{"appid": aid, "grupo": "general"} for aid in candidatos]
     else:
         items = _cargar_manifiesto(ruta_man)
 
-    candidatos_validos: list[tuple[dict[str, Any], dict[str, Any], dict[str, Any]]] = []
-    conteo_publishers: Counter[str] = Counter()
-
-    for item in items:
-        appid = int(item["appid"])
-        if appid not in detalles or appid not in resenas:
-            continue
-        try:
-            fila_dim = parsear_appdetails(detalles[appid], appid)
-            fila_resena = parsear_appreviews(resenas[appid], appid)
-        except ValueError:
-            continue
-
-        #enriquecimiento con el manifiesto curado como respaldo de titulo y fecha
-        fila_dim["title"] = fila_dim["title"] or item.get("titulo")
-        fila_dim["release_date"] = fila_dim["release_date"] or parsear_fecha_steam(
-            str(item["release_date"]) if item.get("release_date") is not None else None
+    if not items:
+        return (
+            pa.Table.from_pylist([], schema=ESQUEMA_DIM_GAME),
+            pa.Table.from_pylist([], schema=ESQUEMA_GAME_REVIEW_SUMMARY),
         )
-        fila_dim["group"] = item.get("grupo")
 
-        #en modo masivo se descartan productos sin fecha valida, fuera de catalogo, sin titulo o sin precio
-        if modo == "masivo":
-            if not fila_dim.get("release_date") or not fila_dim.get("title"):
-                continue
-            try:
-                f_obj = date.fromisoformat(str(fila_dim["release_date"]))
-                if not (FECHA_MINIMA_CATALOGO <= f_obj <= FECHA_MAXIMA_CATALOGO):
-                    continue
-            except (ValueError, TypeError):
-                continue
-            if not fila_dim.get("is_free") and fila_dim.get("price_launch_usd_cents") is None:
-                continue
+    #construir lotes de items emparejados con sus rutas de bronce
+    tamano_lote = max(1, perfil.batch_size)
+    lotes: list[list[tuple[dict[str, Any], Optional[Path], Optional[Path]]]] = []
+    for i in range(0, len(items), tamano_lote):
+        chunk = items[i : i + tamano_lote]
+        lote_chunk = [
+            (it, rutas_detalles.get(int(it["appid"])), rutas_resenas.get(int(it["appid"])))
+            for it in chunk
+        ]
+        lotes.append(lote_chunk)
 
-        candidatos_validos.append((item, fila_dim, fila_resena))
-        for pub in fila_dim.get("publishers", []):
-            if pub and pub.strip():
-                conteo_publishers[pub.strip().lower()] += 1
+    #ejecucion adaptativa: paralela con ProcessPoolExecutor o secuencial
+    if perfil.usar_multiproceso and len(lotes) > 1:
+        with ProcessPoolExecutor(max_workers=perfil.workers_asignados) as executor:
+            resultados_lotes = list(
+                executor.map(_procesar_lote_trabajador, lotes, [modo] * len(lotes))
+            )
+    else:
+        resultados_lotes = [_procesar_lote_trabajador(lote, modo) for lote in lotes]
 
-    #cargar taxonomia una sola vez para evitar I/O redundante
-    tax_config = cargar_taxonomia()
+    #consolidar conteo global de publishers y elementos procesados
+    conteo_publishers: Counter[str] = Counter()
+    todos_los_elementos: list[dict[str, Any]] = []
+    for elementos_lote, conteo_local in resultados_lotes:
+        conteo_publishers.update(conteo_local)
+        todos_los_elementos.extend(elementos_lote)
+
+    tax_config = _obtener_taxonomia_local()
     filas_dim: list[dict[str, Any]] = []
     filas_resenas: list[dict[str, Any]] = []
 
-    for item, fila_dim, fila_resena in candidatos_validos:
-        desc_texto = fila_dim.pop("_desc_texto", "")
-        descriptors = fila_dim.pop("_descriptors_steam", [])
-        categories = fila_dim.pop("_categories", [])
+    for elem in todos_los_elementos:
+        fila_dim = elem["fila_dim"]
+        fila_resena = elem["fila_resena"]
 
-        #etiquetas consolidadas combinando categorias de tienda y generos
-        etiquetas_tienda = categories + [g for g in fila_dim["genres"] if g not in categories]
-
-        res_motor = clasificar_motor(
-            descripcion=desc_texto,
-            tags=etiquetas_tienda,
-            taxonomia=tax_config,
-        )
-
-        precio_usd = (
-            0.0 if fila_dim["is_free"]
-            else (fila_dim["price_launch_usd_cents"] / 100.0 if fila_dim["price_launch_usd_cents"] is not None else None)
-        )
-
-        #determinar tamano del catalogo del publisher
+        #determinar tamano del catalogo del publisher segun conteo consolidado
         titulos_pub = None
         if fila_dim["publishers"]:
             conteos_pub = [
@@ -428,35 +530,18 @@ def construir_tablas_plata(
                 titulos_pub = max(conteos_pub)
 
         res_indie = calcular_indie_score(
-            tags=etiquetas_tienda,
+            tags=elem["etiquetas_tienda"],
             generos=fila_dim["genres"],
             developers=fila_dim["developers"],
             publishers=fila_dim["publishers"],
-            price_usd=precio_usd,
+            price_usd=elem["precio_usd"],
             language_count=fila_dim["language_count"],
             titulos_del_publisher=titulos_pub,
             taxonomia=tax_config,
         )
 
-        res_ia = clasificar_divulgacion_ia(
-            descriptors_steam=descriptors,
-            tags=etiquetas_tienda,
-            descripcion_o_notas=desc_texto,
-            taxonomia=tax_config,
-        )
-
-        es_grupo_godot = item.get("grupo") == "godot"
-        if es_grupo_godot:
-            fila_dim["engine"] = "godot"
-            nivel = item.get("evidencia_nivel")
-            fila_dim["engine_evidence_level"] = int(nivel) if nivel is not None else (res_motor.evidence_level or 1)
-        else:
-            fila_dim["engine"] = res_motor.engine
-            fila_dim["engine_evidence_level"] = res_motor.evidence_level
-
         fila_dim["indie_score"] = res_indie.indie_score
         fila_dim["is_indie"] = res_indie.is_indie
-        fila_dim["ai_disclosure_level"] = res_ia.disclosure_level.value
         fila_dim["pipeline_version"] = version
         fila_resena["pipeline_version"] = version
 
@@ -465,8 +550,27 @@ def construir_tablas_plata(
 
     filas_dim.sort(key=lambda f: f["game_id"])
     filas_resenas.sort(key=lambda f: f["game_id"])
-    dim_game = pa.Table.from_pylist(filas_dim, schema=ESQUEMA_DIM_GAME)
-    resumen = pa.Table.from_pylist(filas_resenas, schema=ESQUEMA_GAME_REVIEW_SUMMARY)
+
+    #construccion de tablas arrow mediante record batches compactos
+    batches_dim: list[pa.RecordBatch] = []
+    batches_resenas: list[pa.RecordBatch] = []
+    for i in range(0, len(filas_dim), tamano_lote):
+        chunk_dim = filas_dim[i : i + tamano_lote]
+        chunk_res = filas_resenas[i : i + tamano_lote]
+        batches_dim.append(pa.RecordBatch.from_pylist(chunk_dim, schema=ESQUEMA_DIM_GAME))
+        batches_resenas.append(pa.RecordBatch.from_pylist(chunk_res, schema=ESQUEMA_GAME_REVIEW_SUMMARY))
+
+    dim_game = (
+        pa.Table.from_batches(batches_dim, schema=ESQUEMA_DIM_GAME)
+        if batches_dim
+        else pa.Table.from_pylist([], schema=ESQUEMA_DIM_GAME)
+    )
+    resumen = (
+        pa.Table.from_batches(batches_resenas, schema=ESQUEMA_GAME_REVIEW_SUMMARY)
+        if batches_resenas
+        else pa.Table.from_pylist([], schema=ESQUEMA_GAME_REVIEW_SUMMARY)
+    )
+
     return dim_game, resumen
 
 
@@ -513,6 +617,7 @@ def ejecutar_transformacion_plata(
     validador: Optional[Callable[[pa.Table, pa.Table], None]] = None,
     modo: str = "control",
     appids_objetivo: Optional[list[int]] = None,
+    perfil_hardware: Optional[PerfilHardware] = None,
 ) -> dict[str, Any]:
     """Construir, validar opcionalmente y persistir la capa plata.
     El validador se ejecuta en memoria antes de cualquier escritura: si lanza una excepcion,
@@ -527,6 +632,7 @@ def ejecutar_transformacion_plata(
         version_pipeline=version_pipeline,
         modo=modo,
         appids_objetivo=appids_objetivo,
+        perfil_hardware=perfil_hardware,
     )
     if validador is not None:
         validador(dim_game, resumen)
