@@ -2,10 +2,13 @@
 #cubre perfil de hardware adaptativo, indexacion ligera de rutas y equivalencia matematica
 from pathlib import Path
 
+import pyarrow as pa
 import pytest
 
+from src.extract.bronce import crear_envoltorio_bronce, guardar_en_bronce
 from src.transform.plata import (
     PerfilHardware,
+    construir_tablas_plata,
     detectar_perfil_hardware,
     indexar_rutas_bronce,
 )
@@ -106,3 +109,98 @@ def test_indexar_rutas_bronce_con_fecha_especifica(tmp_path: Path) -> None:
     indice = indexar_rutas_bronce(ruta_base=tmp_path, recurso="appreviews_resumen", fecha="2026-10-18")
     assert len(indice) == 1
     assert indice[50] == f1
+
+
+def _crear_juego_sintetico(
+    base: Path,
+    appid: int,
+    nombre: str,
+    publisher: str,
+    engine_desc: str,
+    positivas: int = 10,
+    negativas: int = 2,
+    fecha: str = "2026-10-18",
+) -> None:
+    """Helper para crear fixtures sinteticos en bronce sin red."""
+    details = {
+        str(appid): {
+            "success": True,
+            "data": {
+                "name": nombre,
+                "release_date": {"date": "15 May, 2024"},
+                "is_free": False,
+                "price_overview": {"currency": "USD", "initial": 1499},
+                "genres": [{"description": "Indie"}],
+                "supported_languages": "English*",
+                "developers": ["Solo Dev"],
+                "publishers": [publisher],
+                "detailed_description": f"A game made with {engine_desc}.",
+            },
+        }
+    }
+    reviews = {
+        "success": 1,
+        "query_summary": {
+            "total_positive": positivas,
+            "total_negative": negativas,
+            "total_reviews": positivas + negativas,
+        },
+    }
+    env_det = crear_envoltorio_bronce("steam_appdetails", "https://example.invalid", {}, 200, details, "2026-10-18T00:00:00Z")
+    env_rev = crear_envoltorio_bronce("steam_appreviews", "https://example.invalid", {}, 200, reviews, "2026-10-18T00:00:00Z")
+    guardar_en_bronce("appdetails", fecha, appid, env_det, ruta_base=base)
+    guardar_en_bronce("appreviews_resumen", fecha, appid, env_rev, ruta_base=base)
+
+
+def test_equivalencia_matematica_secuencial_vs_multiproceso(tmp_path: Path) -> None:
+    """Verificar que la ejecucion secuencial y la multiproceso produzcan tablas Arrow bit-identicas."""
+    #crear 6 juegos con motores y publishers diversos
+    juegos = [
+        (10, "Godot Quest", "Indie Pub A", "Godot Engine v4.2", 15, 1),
+        (20, "Unreal Shooter", "Indie Pub A", "Unreal Engine 5", 50, 5),
+        (30, "Unity Platformer", "Indie Pub B", "Made with Unity 2022", 100, 20),
+        (40, "Custom Rogue", "Solo Dev", "Custom C++ engine", 8, 2),
+        (50, "Pico Adventure", "Solo Dev", "Pico-8 fantasy console", 4, 0),
+        (60, "Renpy Novel", "Novel Studio", "Ren'Py Visual Novel", 30, 3),
+    ]
+    for aid, nom, pub, eng, pos, neg in juegos:
+        _crear_juego_sintetico(tmp_path, aid, nom, pub, eng, pos, neg)
+
+    perfil_sec = PerfilHardware(
+        hilos_logicos_detectados=1,
+        categoria_hardware="gama_baja_secuencial",
+        workers_asignados=1,
+        usar_multiproceso=False,
+        batch_size=2,
+    )
+    perfil_par = PerfilHardware(
+        hilos_logicos_detectados=4,
+        categoria_hardware="gama_media_moderada",
+        workers_asignados=2,
+        usar_multiproceso=True,
+        batch_size=2,
+    )
+
+    dim_sec, res_sec = construir_tablas_plata(
+        ruta_base=tmp_path,
+        modo="masivo",
+        perfil_hardware=perfil_sec,
+    )
+    dim_par, res_par = construir_tablas_plata(
+        ruta_base=tmp_path,
+        modo="masivo",
+        perfil_hardware=perfil_par,
+    )
+
+    assert isinstance(dim_sec, pa.Table)
+    assert isinstance(dim_par, pa.Table)
+    assert dim_sec.num_rows == 6
+    assert dim_par.num_rows == 6
+
+    #verificar equivalencia matematica estricta
+    assert dim_sec.equals(dim_par)
+    assert res_sec.equals(res_par)
+
+    #verificar ordenamiento ascendente por game_id
+    ids = dim_par.column("game_id").to_pylist()
+    assert ids == [10, 20, 30, 40, 50, 60]
