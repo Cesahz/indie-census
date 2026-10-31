@@ -8,6 +8,15 @@
 - publicacion del dataset abierto en parquet y csv con metodologia, diccionario y limitaciones (fase 4)
 - enriquecimiento de etiquetas comunitarias de tienda mediante dataset externo para clasificacion de motores nivel 2
 
+## [0.3.7] - 2026-10-30
+
+### agregado
+
+- tablas maestras agregadas en capa oro: adopcion mensual de motores, distribucion de precios por genero y saturacion mensual relativa (src/transform/oro_agregados.py)
+- contratos estadisticos bloqueantes de continuidad temporal y control de rango historico de tres desviaciones estandar (src/quality/contratos_oro.py)
+- inyeccion estricta de reloj en transformaciones analiticas para determinismo historico
+- suite de pruebas en memoria y contratos analiticos sin red (tests/transform/test_oro_agregados.py, tests/quality/test_contratos_oro_estadisticos.py)
+
 ## [0.3.6] - 2026-10-30
 
 ### agregado
