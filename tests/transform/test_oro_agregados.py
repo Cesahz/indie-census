@@ -1,7 +1,10 @@
 #suite de pruebas para la construccion de tablas analiticas agregadas en capa oro
 from datetime import date
+from pathlib import Path
+import sqlite3
 
 import pyarrow as pa
+import pyarrow.parquet as pq
 
 from src.transform.oro import (
     ESQUEMA_DIM_DATE,
@@ -14,6 +17,8 @@ from src.transform.oro_agregados import (
     ESQUEMA_GOLD_PRICING_GENRE,
     ESQUEMA_GOLD_SATURATION_MONTHLY,
     construir_tablas_oro_agregadas,
+    persistir_tablas_oro_agregadas_parquet,
+    persistir_tablas_oro_agregadas_sqlite,
 )
 
 
@@ -157,3 +162,44 @@ def test_determinismo_con_reloj_inyectado() -> None:
 
     for k in t1:
         assert t1[k].equals(t2[k])
+
+
+def test_indice_saturacion_relativa() -> None:
+    """Verificar calculo del indice de saturacion en gold_market_saturation_monthly."""
+    star = _crear_star_schema_sintetico()
+    tablas = construir_tablas_oro_agregadas(star, fecha_corte=date(2024, 3, 31))
+    sat_table = tablas["gold_market_saturation_monthly"]
+    filas = sat_table.to_pylist()
+
+    #en 2024-02 hay 3 indies en Action con 100, 50, 200 reviews (total 350 reviews)
+    action_feb = next(f for f in filas if f["year_month"] == "2024-02" and f["genre"] == "Action")
+    assert action_feb["indie_releases_count"] == 3
+    assert action_feb["total_reviews_captured"] == 350
+    assert action_feb["saturation_index"] > 0.0
+
+
+def test_persistir_tablas_oro_agregadas_parquet_y_sqlite(tmp_path: Path) -> None:
+    """Verificar persistencia atomica en Parquet y en Data Mart SQLite."""
+    star = _crear_star_schema_sintetico()
+    tablas = construir_tablas_oro_agregadas(star, fecha_corte=date(2024, 3, 31))
+
+    dir_parquet = tmp_path / "mart_agregado"
+    rutas = persistir_tablas_oro_agregadas_parquet(tablas, ruta_oro=dir_parquet)
+    assert len(rutas) == 3
+    for nom, ruta in rutas.items():
+        assert ruta.exists()
+        leida = pq.read_table(ruta)
+        assert leida.equals(tablas[nom])
+
+    ruta_db = tmp_path / "indie_census_mart.db"
+    persistir_tablas_oro_agregadas_sqlite(tablas, ruta_db=ruta_db)
+    assert ruta_db.exists()
+
+    con = sqlite3.connect(ruta_db)
+    cur = con.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    nombres_tablas = {r[0] for r in cur.fetchall()}
+    con.close()
+    assert "gold_engine_adoption_monthly" in nombres_tablas
+    assert "gold_pricing_by_genre" in nombres_tablas
+    assert "gold_market_saturation_monthly" in nombres_tablas
