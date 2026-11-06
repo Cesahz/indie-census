@@ -95,6 +95,7 @@ def ejecutar_pipeline(
             max_juegos=max_juegos,
             fecha=fecha,
             ruta_base=base,
+            ruta_destino=manifiesto_maestro,
         )
         return {
             "estado": "ok",
