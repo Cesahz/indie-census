@@ -160,22 +160,25 @@ class SteamClient:
 
     def get_app_reviews_summary(self, appid: int) -> dict[str, Any]:
         """Obtener resumen de resenas de aplicacion desde steam web api o store api."""
-        #si se dispone de api_key, consultar endpoint oficial de webapi
+        #consultar endpoint oficial de webapi IUserReviewsService (funciona con y sin key)
+        url_api = (
+            f"{self.base_url_api}/IUserReviewsService/GetAppReviews/v1/"
+            f"?appid={appid}&max_num_reviews=0"
+        )
         if self.api_key:
-            url_api = (
-                f"{self.base_url_api}/IUserReviewsService/GetAppReviews/v1/"
-                f"?key={self.api_key}&appid={appid}&max_num_reviews=0"
-            )
-            try:
-                datos = self._ejecutar_solicitud(url_api)
-                resp = datos.get("response", {})
-                if "query_summary" in resp:
-                    return {
-                        "success": 1,
-                        "query_summary": resp["query_summary"],
-                    }
-            except Exception:
-                pass
+            url_api += f"&key={self.api_key}"
+        try:
+            datos = self._ejecutar_solicitud(url_api)
+            resp = datos.get("response", {})
+            if "query_summary" in resp:
+                return {
+                    "success": 1,
+                    "query_summary": resp["query_summary"],
+                }
+            if "query_summary" in datos:
+                return datos
+        except Exception:
+            pass
 
         #fallback a endpoint tradicional de tienda con todos los idiomas
         url = (
