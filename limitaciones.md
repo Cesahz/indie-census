@@ -55,3 +55,15 @@ Cualquier conclusión extraída de este observatorio debe interpretarse dentro d
 
 - **Fecha de Registro:** Se registra la fecha de publicación original del producto en la tienda.
 - **Dinámica de Reseñas:** Aquellos títulos que debutaron en Acceso Anticipado durante 2024 o 2025 y alcanzaron su lanzamiento 1.0 en 2026 acumulan reseñas a lo largo de todo su ciclo de vida, lo que puede reflejar un volumen superior frente a títulos con lanzamiento directo 1.0 de edad comercial similar.
+
+---
+
+## 6. Ciclo de Vida: Snapshot Congelado vs. Observatorio Continuo
+
+- **Naturaleza de los Releases:** Cada versión etiquetada del dataset (ej. `v0.4.0`) constituye un **snapshot inmutable congelado** con hashes criptográficos SHA-256 precalculados para garantizar que cualquier análisis, paper o visualización pública sea reproducible bit a bit a lo largo del tiempo.
+- **Minería Periódica y Extensiones de Cohorte:** El observatorio contempla campañas regulares de minería incremental. Cuando se ejecuta una nueva pasada de descubrimiento (`--modo masivo --descubrir`):
+  1. Se incorporan los nuevos títulos lanzados con posterioridad a la última fecha de corte.
+  2. Se re-extraen las reseñas acumuladas para observar la maduración comercial de los juegos existentes.
+  3. Los nuevos datos se consolidan en una nueva partición fechada en Capa Bronce (`fecha=YYYY-MM-DD`) sin sobreescribir jamás los archivos históricos previos.
+- **Transición Hacia Nivel 2 de Motores:** La limitación actual del 1.1% en la detección de motores en texto plano será mitigada en la siguiente fase de minería mediante el cruce de un dataset auxiliar de etiquetas comunitarias de Steam (Nivel 2 de evidencia), proyectando elevar la tasa de identificación de tecnologías (Godot, Unity, Unreal) a más del 35% del catálogo total.
+

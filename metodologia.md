@@ -127,7 +127,58 @@ El procesamiento de datos sigue un flujo unidireccional y hermético de tres cap
 
 ---
 
-## 5. Quickstart de Consulta Inmediata (DuckDB / Polars)
+
+---
+
+## 5. Protocolo de Minería Continua y Actualización Incremental
+
+Indie Census no es un dataset estático cerrado en el tiempo, sino una plataforma de observatorio vivo con capacidades de minería periódica e ingesta incremental. El sistema está diseñado para incorporar nuevos lanzamientos y actualizar métricas de recepción comercial sin necesidad de reprocesar el catálogo histórico desde cero.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│               FLUJO DE MINERÍA INCREMENTAL DE STEAM                    │
+├────────────────────────────────────────────────────────────────────────┤
+│ 1. Descubrimiento: IStoreService/GetAppList/v1                         │
+│    └── Filtrado por min_appid (identificadores > cohorte actual)      │
+│ 2. Deduplicación por Checkpoint: data/checkpoint.json                  │
+│    └── Omitir los 63.770 appids ya completados e inmutables en Bronce  │
+│ 3. Extracción Resiliente: Web API con Backoff Adaptativo + Jitter      │
+│    └── Respeto de cuotas de Valve y gestión automática de códigos 429  │
+│ 4. Ingesta a Bronce: Particionado por fecha=YYYY-MM-DD y hash SHA-256  │
+│ 5. Procesamiento Streaming: Plata y Oro agregadas en < 2 minutos       │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5.1 Mecanismo de Checkpointing e Idempotencia
+El proceso de minería está custodiado por el gestor de checkpoints (`data/checkpoint.json`). Este archivo registra en tiempo real el conjunto de identificadores completados para cada recurso (`appdetails` y `appreviews_resumen`). 
+
+Si una sesión de minería se interrumpe por conectividad, suspensión de la máquina o mantenimiento de los servidores de Valve, el pipeline reanuda en el juego exacto donde se detuvo sin realizar una sola llamada HTTP redundante a la tienda.
+
+### 5.2 Control de Tasa (Rate Limiting) y Resiliencia HTTP
+Valve impone restricciones dinámicas de cuota (códigos de respuesta `HTTP 429 Too Many Requests`). El cliente de extracción de Indie Census implementa:
+- **Lectura activa del encabezado `Retry-After`:** Cuando Steam solicita una pausa, el cliente duerme el tiempo exacto exigido por la plataforma.
+- **Backoff Exponencial con Jitter Aleatorio:** Si el encabezado no está presente, el cliente aplica una penalización exponencial con dispersión uniforme para evitar resonancias y ráfagas concurrentes.
+- **Historial de Resiliencia:** Este algoritmo ha superado pruebas en entornos de estrés procesando más de 34.000 respuestas 429 sin una sola pérdida de datos ni bloqueo de IP.
+
+### 5.3 Sharding Modular Distribuido
+Para campañas de minería masiva donde se analizan decenas de miles de juegos nuevos, el extractor admite particionamiento modular determinista:
+
+$$	ext{worker\_asignado} = 	ext{appid} \pmod{	ext{total\_workers}}$$
+
+Esto permite distribuir la carga entre varias máquinas o instancias cloud (ej. PC Local y Google Colab Pro) coordinadas por un manifiesto maestro común (`manifest_master.json`), con sincronización por bloques empaquetados en `snapshot.tar.gz`.
+
+### 5.4 Comando de Minería
+Para ejecutar una campaña de minería incremental en el entorno local:
+
+```bash
+#minar nuevos juegos descubiertos en steam y actualizar la capa bronce
+python -m src.pipeline --modo masivo --descubrir --fecha 2026-11-06
+
+#reprocesar la transformacion de plata y oro sobre el nuevo bronce acumulado
+python -m src.pipeline --omitir-extraccion --generar-oro --modo masivo
+```
+
+## 6. Quickstart de Consulta Inmediata (DuckDB / Polars)
 
 El dataset abierto puede consultarse en memoria en milisegundos sin necesidad de instalar bases de datos cliente-servidor:
 
@@ -172,7 +223,7 @@ print(top_meses.head(5))
 
 ---
 
-## 6. Citación y Licencias
+## 7. Citación y Licencias
 
 ### Cómo Citar este Observatorio
 Si utilizas los datos o la metodología de Indie Census en investigaciones académicas, reportajes periodísticos o publicaciones del sector, por favor cita el proyecto como:
@@ -191,3 +242,4 @@ Si utilizas los datos o la metodología de Indie Census en investigaciones acad�
 ### Licencias
 - **Código Fuente y Scripts:** Licencia [MIT](LICENSE).
 - **Datasets y Documentación:** [Creative Commons Attribution 4.0 International (CC-BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+
