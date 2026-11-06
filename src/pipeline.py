@@ -2,6 +2,7 @@
 #flujo: extraccion a bronce -> transformacion a plata -> contratos bloqueantes de calidad
 #uso: python -m src.pipeline [--fecha AAAA-MM-DD] [--ruta-base DIR] [--manifiesto YAML] [--omitir-extraccion]
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Any, Optional
@@ -44,6 +45,8 @@ def ejecutar_pipeline(
     mostrar_progreso: bool = True,
     congelar_manifiesto: bool = False,
     min_appid: int = 2400000,
+    max_appid: Optional[int] = None,
+    excluir_completados: bool = False,
     manifiesto_maestro: Optional[Path] = None,
     worker_id: int = 0,
     total_workers: int = 1,
@@ -78,9 +81,17 @@ def ejecutar_pipeline(
     metricas_extraccion: Optional[dict[str, Any]] = None
     if congelar_manifiesto:
         cliente_steam = client or SteamClient()
+        excluidos_set: Optional[set[int]] = None
+        if excluir_completados and checkpoint.is_file():
+            with open(checkpoint, "r", encoding="utf-8") as f:
+                datos_cp = json.load(f).get("completados", {})
+            excluidos_set = set(datos_cp.get("appdetails", [])) & set(datos_cp.get("appreviews_resumen", []))
+
         ruta_m = congelar_manifiesto_maestro(
             client=cliente_steam,
             min_appid=min_appid,
+            max_appid=max_appid,
+            excluir_appids=excluidos_set,
             max_juegos=max_juegos,
             fecha=fecha,
             ruta_base=base,
@@ -214,6 +225,14 @@ def _construir_parser() -> argparse.ArgumentParser:
         help="AppID minimo para acotar universo objetivo (por defecto 2400000 para cohorte 2024-2026).",
     )
     parser.add_argument(
+        "--max-appid", type=int, default=None,
+        help="AppID maximo para acotar universo objetivo (opcional).",
+    )
+    parser.add_argument(
+        "--excluir-completados", action="store_true",
+        help="Excluir del manifiesto maestro los AppIDs ya registrados en checkpoint.json.",
+    )
+    parser.add_argument(
         "--manifiesto-maestro", type=Path, default=None,
         help="Ruta al archivo manifest_master.json para ingesta distribuida con particionamiento modular.",
     )
@@ -262,6 +281,8 @@ def main(argv: Optional[list[str]] = None, client: Optional[Any] = None) -> int:
             mostrar_progreso=not args.sin_progreso,
             congelar_manifiesto=args.congelar_manifiesto,
             min_appid=args.min_appid,
+            max_appid=args.max_appid,
+            excluir_completados=args.excluir_completados,
             manifiesto_maestro=args.manifiesto_maestro,
             worker_id=args.worker_id,
             total_workers=args.total_workers,

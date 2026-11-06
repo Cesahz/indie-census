@@ -220,29 +220,39 @@ def descubrir_catalogo_steam(
 def congelar_manifiesto_maestro(
     client: Optional[SteamClient] = None,
     min_appid: int = 2400000,
+    max_appid: Optional[int] = None,
+    excluir_appids: Optional[set[int]] = None,
     max_juegos: Optional[int] = None,
     fecha: Optional[str] = None,
     ruta_base: Optional[Path] = None,
     ruta_destino: Optional[Path] = None,
 ) -> Path:
-    """Descubrir catalogo en Steam, filtrar por umbral min_appid y congelar manifest_master.json inmutable."""
+    """Descubrir catalogo en Steam, filtrar por umbrales min/max appid y congelar manifest_master.json inmutable."""
     cliente_activo = client or SteamClient()
     if fecha is None:
         fecha = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
+    excluidos = excluir_appids or set()
     appids_encontrados: set[int] = set()
     for app in cliente_activo.iterar_catalogo_completo():
         aid = int(app["appid"])
-        if aid >= min_appid:
-            appids_encontrados.add(aid)
-            if max_juegos is not None and len(appids_encontrados) >= max_juegos:
-                break
+        if aid >= min_appid and (max_appid is None or aid <= max_appid):
+            if aid not in excluidos:
+                appids_encontrados.add(aid)
+                if max_juegos is not None and len(appids_encontrados) >= max_juegos:
+                    break
 
     appids_ordenados = sorted(appids_encontrados)
 
+    criterio = f"appid >= {min_appid}"
+    if max_appid is not None:
+        criterio += f" and appid <= {max_appid}"
+    if excluidos:
+        criterio += f" (excluyendo {len(excluidos)} completados)"
+
     payload = {
         "descripcion": "Manifiesto maestro inmutable para ingesta distribuida",
-        "criterio_filtro": f"appid >= {min_appid}",
+        "criterio_filtro": criterio,
         "total_appids": len(appids_ordenados),
         "min_appid": appids_ordenados[0] if appids_ordenados else None,
         "max_appid": appids_ordenados[-1] if appids_ordenados else None,
@@ -252,7 +262,12 @@ def congelar_manifiesto_maestro(
     envoltorio = crear_envoltorio_bronce(
         fuente="steam.catalog.manifest_master",
         url_solicitada="IStoreService/GetAppList/v1",
-        parametros={"min_appid": min_appid, "max_juegos": max_juegos},
+        parametros={
+            "min_appid": min_appid,
+            "max_appid": max_appid,
+            "max_juegos": max_juegos,
+            "excluidos_count": len(excluidos),
+        },
         estado_http=200,
         payload=payload,
     )
