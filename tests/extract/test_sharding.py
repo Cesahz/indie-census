@@ -162,3 +162,34 @@ def test_sincronizar_snapshot_tar(tmp_path: Path) -> None:
     with tarfile.open(archivo_tar, "r:gz") as tar:
         nombres = tar.getnames()
         assert any("2600001.json" in n for n in nombres)
+
+def test_congelar_manifiesto_maestro_con_max_appid_y_exclusion(tmp_path: Path) -> None:
+    #congelar manifiesto admite max_appid y exclusion de appids ya completados
+    mock_client = MagicMock()
+    mock_client.iterar_catalogo_completo.return_value = iter([
+        {"appid": 100, "name": "Antiguo"},
+        {"appid": 1200050, "name": "Rango 1"},
+        {"appid": 1500000, "name": "Ya completado"},
+        {"appid": 2000000, "name": "Rango 2"},
+        {"appid": 3000000, "name": "Fuera de max"},
+    ])
+
+    ruta_manifiesto = congelar_manifiesto_maestro(
+        client=mock_client,
+        min_appid=1200000,
+        max_appid=2400000,
+        excluir_appids={1500000},
+        fecha="2026-11-06",
+        ruta_base=tmp_path,
+    )
+
+    with open(ruta_manifiesto, "r", encoding="utf-8") as f:
+        datos = json.load(f)
+
+    payload = datos["payload"]
+    assert payload["total_appids"] == 2
+    assert payload["appids"] == [1200050, 2000000]
+    assert payload["min_appid"] == 1200050
+    assert payload["max_appid"] == 2000000
+    assert "max_appid" in payload["criterio_filtro"]
+

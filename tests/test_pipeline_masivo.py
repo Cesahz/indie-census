@@ -371,3 +371,9 @@ def test_ejecutar_pipeline_manifiesto_maestro_sharding(tmp_path: Path) -> None:
     assert res_worker["extraccion"]["total_solicitados"] == 2
     assert res_worker["extraccion"]["procesados_exito"] == 2
 
+def test_parser_cli_acepta_max_appid() -> None:
+    #el parser cli debe aceptar --max-appid
+    parser = _construir_parser()
+    args = parser.parse_args(["--congelar-manifiesto", "--min-appid", "1200000", "--max-appid", "2400000"])
+    assert args.max_appid == 2400000
+
