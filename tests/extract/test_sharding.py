@@ -191,5 +191,5 @@ def test_congelar_manifiesto_maestro_con_max_appid_y_exclusion(tmp_path: Path) -
     assert payload["appids"] == [1200050, 2000000]
     assert payload["min_appid"] == 1200050
     assert payload["max_appid"] == 2000000
-    assert "max_appid" in payload["criterio_filtro"]
+    assert "2400000" in payload["criterio_filtro"] and "1200000" in payload["criterio_filtro"]
 
