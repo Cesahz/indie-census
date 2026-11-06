@@ -13,6 +13,14 @@ from src.transform.exportar_dataset_publico import (
     verificar_manifiesto_checksums,
 )
 
+TABLAS_SINTETICAS = [
+    ("plata", "plata_steam_catalogo_limpio"),
+    ("plata", "plata_steam_metricas_limpias"),
+    ("oro", "gold_engine_adoption_monthly"),
+    ("oro", "gold_pricing_by_genre"),
+    ("oro", "gold_market_saturation_monthly"),
+]
+
 
 @pytest.fixture
 def entorno_datos_sinteticos(tmp_path: Path) -> tuple[Path, Path, Path]:
@@ -103,6 +111,7 @@ def test_exportar_dataset_publico_genera_archivos_dual_y_checksums(
         ruta_oro=ruta_oro,
         ruta_destino=ruta_destino,
         version="v0.4.0",
+        tablas=TABLAS_SINTETICAS,
     )
 
     assert reporte["version"] == "v0.4.0"
@@ -116,15 +125,7 @@ def test_exportar_dataset_publico_genera_archivos_dual_y_checksums(
     assert dir_csv.is_dir()
     assert archivo_checksums.is_file()
 
-    #verificar presencia de cada tabla en ambos formatos
-    tablas_esperadas = [
-        "plata_steam_catalogo_limpio",
-        "plata_steam_metricas_limpias",
-        "gold_engine_adoption_monthly",
-        "gold_pricing_by_genre",
-        "gold_market_saturation_monthly",
-    ]
-    for tabla in tablas_esperadas:
+    for _, tabla in TABLAS_SINTETICAS:
         assert (dir_parquet / f"{tabla}.parquet").is_file()
         assert (dir_csv / f"{tabla}.csv").is_file()
 
@@ -140,6 +141,7 @@ def test_verificar_manifiesto_checksums_exito(
         ruta_oro=ruta_oro,
         ruta_destino=ruta_destino,
         version="v0.4.0",
+        tablas=TABLAS_SINTETICAS,
     )
     manifiesto = Path(reporte["manifiesto_checksums"])
 
@@ -158,6 +160,7 @@ def test_verificar_manifiesto_checksums_detecta_corrupcion(
         ruta_oro=ruta_oro,
         ruta_destino=ruta_destino,
         version="v0.4.0",
+        tablas=TABLAS_SINTETICAS,
     )
     manifiesto = Path(reporte["manifiesto_checksums"])
 
@@ -183,6 +186,7 @@ def test_exportar_dataset_publico_preserva_filas_y_esquema(
         ruta_oro=ruta_oro,
         ruta_destino=ruta_destino,
         version="v0.4.0",
+        tablas=TABLAS_SINTETICAS,
     )
 
     archivo_parquet_exportado = ruta_destino / "v0.4.0" / "parquet" / "gold_engine_adoption_monthly.parquet"
