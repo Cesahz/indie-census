@@ -76,27 +76,15 @@ class SteamClient:
         except ImportError:
             pass
 
-        #3. lectura directa de archivo .env como fallback
-        posibles_rutas = [
-            ruta_env,
-            Path.cwd() / ".env",
-            Path(__file__).resolve().parents[2] / ".env",
-        ]
-        for ruta in posibles_rutas:
-            if ruta is not None and ruta.is_file():
-                try:
-                    for linea in ruta.read_text(encoding="utf-8").splitlines():
-                        linea = linea.strip()
-                        if not linea or linea.startswith("#"):
-                            continue
-                        if "=" in linea:
-                            clave, valor = linea.split("=", 1)
-                            clave = clave.strip()
-                            valor = valor.strip().strip("'\"")
-                            if clave == "STEAM_API_KEY" and valor:
-                                return valor
-                except Exception:
-                    pass
+        #3. lectura directa de ruta_env explicita si existe
+        if ruta_env is not None and Path(ruta_env).is_file():
+            try:
+                for linea in Path(ruta_env).read_text(encoding="utf-8").splitlines():
+                    linea = linea.strip()
+                    if linea.startswith("STEAM_API_KEY="):
+                        return linea.split("=", 1)[1].strip().strip("'\"")
+            except Exception:
+                pass
         return None
 
     def _ejecutar_solicitud(self, url: str) -> dict[str, Any]:
@@ -159,34 +147,24 @@ class SteamClient:
         return datos
 
     def get_app_reviews_summary(self, appid: int) -> dict[str, Any]:
-        """Obtener resumen de resenas de aplicacion desde steam web api o store api."""
+        """Obtener resumen de resenas de aplicacion desde steam web api."""
         #consultar endpoint oficial de webapi IUserReviewsService (funciona con y sin key)
         url_api = (
             f"{self.base_url_api}/IUserReviewsService/GetAppReviews/v1/"
-            f"?appid={appid}&max_num_reviews=0"
+            f"?appid={appid}&num_per_page=1"
         )
         if self.api_key:
             url_api += f"&key={self.api_key}"
-        try:
-            datos = self._ejecutar_solicitud(url_api)
-            resp = datos.get("response", {})
-            if "query_summary" in resp:
-                return {
-                    "success": 1,
-                    "query_summary": resp["query_summary"],
-                }
-            if "query_summary" in datos:
-                return datos
-        except Exception:
-            pass
-
-        #fallback a endpoint tradicional de tienda con todos los idiomas
-        url = (
-            f"https://store.steampowered.com/appreviews/{appid}"
-            f"?json=1&language=all&purchase_type=all&num_per_page=0"
+        datos = self._ejecutar_solicitud(url_api)
+        resp = datos.get("response", {})
+        if "query_summary" in resp:
+            return {
+                "success": 1,
+                "query_summary": resp["query_summary"],
+            }
+        raise SteamServerError(
+            f"Respuesta de IUserReviewsService no contiene query_summary para appid {appid}"
         )
-        return self._ejecutar_solicitud(url)
-
 
     def get_app_list_batch(
         self,

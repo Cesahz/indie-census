@@ -70,15 +70,18 @@ def extraer_juego(
 
     #2. procesar resumen cuantitativo de resenas si no esta completado
     if not checkpoint.esta_completado("appreviews_resumen", appid):
+        base_api = getattr(client, "base_url_api", None)
+        if not isinstance(base_api, str) or not base_api:
+            base_api = "https://api.steampowered.com"
         url_reviews = (
-            f"https://store.steampowered.com/appreviews/{appid}"
-            f"?json=1&language=all&purchase_type=all&num_per_page=0"
+            f"{base_api}/IUserReviewsService/GetAppReviews/v1/"
+            f"?appid={appid}&num_per_page=1"
         )
         payload_reviews = client.get_app_reviews_summary(appid)
         envoltorio_reviews = crear_envoltorio_bronce(
             fuente="steam.appreviews_resumen",
             url_solicitada=url_reviews,
-            parametros={"language": "all", "purchase_type": "all", "num_per_page": 0},
+            parametros={"review_type": "all", "purchase_type": "all", "num_per_page": 1},
             estado_http=200,
             payload=payload_reviews,
         )
