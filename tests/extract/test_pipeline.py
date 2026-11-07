@@ -307,9 +307,9 @@ def test_extraer_juego_fecha_por_defecto_resuelve_hoy(
     assert resultado == {"appdetails": True, "appreviews_resumen": True}
 
 
-# ---------------------------------------------------------------------------
-# pruebas de descubrimiento de catalogo e ingesta masiva (criterio f3-02)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#pruebas de descubrimiento de catalogo e ingesta masiva (criterio f3-02)
+#---------------------------------------------------------------------------
 
 def test_descubrir_catalogo_steam_persiste_en_bronce(tmp_path: Path) -> None:
     #descubrir_catalogo_steam debe llamar a iterar_catalogo_completo, persistir lotes en bronce y retornar appids

@@ -8,10 +8,10 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Optional
 
-# pyrefly: ignore [missing-import]
+#pyrefly: ignore [missing-import]
 import pytest
 import yaml
-# pyrefly: ignore [missing-import]
+#pyrefly: ignore [missing-import]
 from pydantic import BaseModel, field_validator, model_validator, ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -35,9 +35,9 @@ TOTAL_JUEGOS = 100
 POR_GRUPO = 50
 
 
-# ---------------------------------------------------------------------------
-# esquemas pydantic para el manifiesto poblado
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#esquemas pydantic para el manifiesto poblado
+#---------------------------------------------------------------------------
 
 class EntradaManifiesto(BaseModel):
     """Contrato de una entrada individual del manifiesto de la muestra."""
@@ -112,9 +112,9 @@ class ManifiestoSchema(BaseModel):
     juegos: list[EntradaManifiesto]
 
 
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#helpers
+#---------------------------------------------------------------------------
 
 def _cargar_contenido_yaml() -> Any:
     """Cargar muestra_control.yaml y devolver contenido crudo."""
@@ -152,9 +152,9 @@ def _extraer_sha256_desde_changelog() -> Optional[str]:
     return match.group(1).lower() if match else None
 
 
-# ---------------------------------------------------------------------------
-# f1-01a: existencia y estructura basica del manifiesto
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f1-01a: existencia y estructura basica del manifiesto
+#---------------------------------------------------------------------------
 
 def test_f1_01_manifiesto_existe() -> None:
     #config/muestra_control.yaml debe existir
@@ -187,9 +187,9 @@ def test_f1_01_manifiesto_tiene_campo_juegos() -> None:
 
 
 
-# ---------------------------------------------------------------------------
-# f1-01b: cardinalidad y balance del manifiesto
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f1-01b: cardinalidad y balance del manifiesto
+#---------------------------------------------------------------------------
 
 def test_f1_01_total_100_juegos() -> None:
     #el manifiesto debe tener exactamente 100 entradas
@@ -225,9 +225,9 @@ def test_f1_01_appids_unicos() -> None:
     assert not duplicados, f"appids duplicados en el manifiesto: {sorted(duplicados)}"
 
 
-# ---------------------------------------------------------------------------
-# f1-01c: contratos de ventana de lanzamiento
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f1-01c: contratos de ventana de lanzamiento
+#---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("grupo", ["godot", "general"])
 def test_f1_01_ventana_lanzamiento_por_grupo(grupo: str) -> None:
@@ -243,9 +243,9 @@ def test_f1_01_ventana_lanzamiento_por_grupo(grupo: str) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# f1-01d: contratos de evidencia por grupo
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f1-01d: contratos de evidencia por grupo
+#---------------------------------------------------------------------------
 
 def test_f1_01_godot_evidencia_nivel_1_o_2() -> None:
     #todos los juegos godot deben tener evidencia_nivel 1 o 2
@@ -283,9 +283,9 @@ def test_f1_01_general_sin_evidencia_nivel() -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# f1-01e: campos obligatorios presentes en todas las entradas
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f1-01e: campos obligatorios presentes en todas las entradas
+#---------------------------------------------------------------------------
 
 CAMPOS_OBLIGATORIOS = ["appid", "grupo", "titulo", "release_date", "criterio_inclusion"]
 
@@ -303,9 +303,9 @@ def test_f1_01_campo_obligatorio_presente(campo: str) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# f1-01f: validacion completa del esquema con pydantic (caso de bloqueo)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f1-01f: validacion completa del esquema con pydantic (caso de bloqueo)
+#---------------------------------------------------------------------------
 
 def test_f1_01_esquema_pydantic_valida_manifiesto_completo() -> None:
     #el manifiesto completo debe pasar la validacion pydantic sin errores
@@ -367,9 +367,9 @@ def test_f1_01_pydantic_bloquea_general_con_evidencia_nivel() -> None:
         EntradaManifiesto(**datos_invalidos)
 
 
-# ---------------------------------------------------------------------------
-# f1-01g: integridad sha256 del manifiesto
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f1-01g: integridad sha256 del manifiesto
+#---------------------------------------------------------------------------
 
 
 def test_f1_01_sha256_registrado_en_changelog() -> None:

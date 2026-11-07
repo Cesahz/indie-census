@@ -47,9 +47,9 @@ class DummyResponse:
         raise ValueError("sin contenido json")
 
 
-# ---------------------------------------------------------------------------
-# pruebas de casos exitosos
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#pruebas de casos exitosos
+#---------------------------------------------------------------------------
 
 def test_get_app_details_exitoso() -> None:
     #obtener detalle de juego existente con respuesta 200 valida
@@ -125,9 +125,9 @@ def test_get_app_reviews_summary_con_api_key_consulta_iuserreviews() -> None:
 
 
 
-# ---------------------------------------------------------------------------
-# pruebas de error de negocio y exito falso
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#pruebas de error de negocio y exito falso
+#---------------------------------------------------------------------------
 
 def test_get_app_details_exito_falso_lanza_error_tipado() -> None:
     #cuando steam responde 200 pero success es false, se lanza SteamAppNotFoundError
@@ -143,9 +143,9 @@ def test_get_app_details_exito_falso_lanza_error_tipado() -> None:
     assert issubclass(SteamAppNotFoundError, SteamClientError)
 
 
-# ---------------------------------------------------------------------------
-# pruebas de manejo de 429 y backoff exponencial (f1-05)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#pruebas de manejo de 429 y backoff exponencial (f1-05)
+#---------------------------------------------------------------------------
 
 def test_manejo_429_respeta_cabecera_retry_after() -> None:
     #ante 429 con cabecera Retry-After, duerme el tiempo indicado y reintenta
@@ -217,9 +217,9 @@ def test_manejo_429_tope_reintentos_lanza_error_tipado() -> None:
     assert len(pausas) == 2
 
 
-# ---------------------------------------------------------------------------
-# pruebas de errores de servidor y red
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#pruebas de errores de servidor y red
+#---------------------------------------------------------------------------
 
 def test_error_servidor_500_lanza_error_tipado() -> None:
     #un error 500 debe provocar SteamServerError inmediato
@@ -323,9 +323,9 @@ def test_retry_after_no_numerico_usa_backoff_exponencial() -> None:
     assert pausas == [2.0]
 
 
-# ---------------------------------------------------------------------------
-# pruebas de autenticacion y paginacion de catalogo (criterio f3-01)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#pruebas de autenticacion y paginacion de catalogo (criterio f3-01)
+#---------------------------------------------------------------------------
 
 def test_get_app_list_batch_exitoso() -> None:
     #consultar lote de aplicaciones con clave valida y parametros correctos

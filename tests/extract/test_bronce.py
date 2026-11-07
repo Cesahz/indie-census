@@ -13,9 +13,9 @@ from src.extract.bronce import (
 )
 
 
-# ---------------------------------------------------------------------------
-# pruebas del envoltorio de metadatos
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#pruebas del envoltorio de metadatos
+#---------------------------------------------------------------------------
 
 def test_crear_envoltorio_bronce_estructura_valida() -> None:
     #verificar campos obligatorios del envoltorio
@@ -65,9 +65,9 @@ def test_crear_envoltorio_calcula_sha256_determinista() -> None:
     assert env1["meta"]["sha256_payload"] == env2["meta"]["sha256_payload"]
 
 
-# ---------------------------------------------------------------------------
-# pruebas de almacenamiento y particionado
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#pruebas de almacenamiento y particionado
+#---------------------------------------------------------------------------
 
 def test_guardar_en_bronce_crea_particion_correcta(tmp_path: Path) -> None:
     #verificar ruta data/bronce/steam/<recurso>/fecha=AAAA-MM-DD/appid=<id>.json

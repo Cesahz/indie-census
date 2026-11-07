@@ -14,9 +14,9 @@ from pydantic import BaseModel, ValidationError
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-# ---------------------------------------------------------------------------
-# f0-01: arbol canonico de directorios
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f0-01: arbol canonico de directorios
+#---------------------------------------------------------------------------
 
 DIRECTORIOS_CANONICOS = [
     "adr",
@@ -90,9 +90,9 @@ def test_f0_01_gitkeep_canonico_existe(relpath: str) -> None:
     assert ruta.is_file(), f"marcador .gitkeep ausente: {relpath}"
 
 
-# ---------------------------------------------------------------------------
-# f0-02: efectividad del .gitignore
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f0-02: efectividad del .gitignore
+#---------------------------------------------------------------------------
 
 def _git_ls_files(*rutas: str) -> list[str]:
     """Ejecutar git ls-files y devolver la lista de rutas rastreadas."""
@@ -158,9 +158,9 @@ def test_f0_02_gitkeep_individual_rastreado(relpath: str) -> None:
     assert rastreados != [], f".gitkeep no rastreado: {relpath}"
 
 
-# ---------------------------------------------------------------------------
-# f0-04: regex de conventional commits (normas seccion 3.4)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f0-04: regex de conventional commits (normas seccion 3.4)
+#---------------------------------------------------------------------------
 
 PATRON_COMMIT = re.compile(
     r"^(feat|fix|test|chore|refactor|docs)(\([a-z_]+\))?!?: "
@@ -216,9 +216,9 @@ def test_f0_04_commit_invalido_rechaza(mensaje: str) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# f0-06: esquemas pydantic para config/ (contenido vacio permitido)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f0-06: esquemas pydantic para config/ (contenido vacio permitido)
+#---------------------------------------------------------------------------
 
 class TaxonomySchema(BaseModel):
     """Esquema minimo para taxonomy.yaml; todos los campos son opcionales en fase 0."""
@@ -351,9 +351,9 @@ def test_f0_06_muestra_control_cardinalidad() -> None:
     assert general_count == 50, f"se esperaban 50 del grupo general, se encontraron {general_count}"
 
 
-# ---------------------------------------------------------------------------
-# f0-07: formato de changelog.md
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f0-07: formato de changelog.md
+#---------------------------------------------------------------------------
 
 SECCIONES_ADMITIDAS = {"agregado", "cambiado", "corregido", "eliminado"}
 PATRON_VERSION_RELEASE = re.compile(r"^## \[\d+\.\d+\.\d+\] - \d{4}-\d{2}-\d{2}$")
@@ -445,9 +445,9 @@ def test_f0_07_changelog_no_vacio_bajo_sin_publicar() -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# f0-08: coherencia version.py <-> changelog.md
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#f0-08: coherencia version.py <-> changelog.md
+#---------------------------------------------------------------------------
 
 def _extraer_version_py() -> str:
     """Leer la version definida en src/version.py."""
@@ -474,7 +474,7 @@ def _extraer_ultima_version_changelog() -> Optional[str]:
 
 
 def test_f0_08_version_py_formato_semver() -> None:
-    #PIPELINE_VERSION debe seguir el formato semver x.y.z
+    #pipeline_version debe seguir el formato semver x.y.z
     version = _extraer_version_py()
     patron_semver = re.compile(r"^\d+\.\d+\.\d+$")
     assert patron_semver.match(version), (
