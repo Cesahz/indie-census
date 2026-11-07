@@ -3,7 +3,7 @@
 [Read in English](README.md) · [Leer en español](README.es.md)
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-383%20passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-423%20passed-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen.svg)
 ![Architecture](https://img.shields.io/badge/architecture-Data%20Lakehouse-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -11,7 +11,7 @@
 
 Observatorio abierto de datos del ecosistema de desarrollo de videojuegos independiente.
 
-> **Estado del proyecto:** En desarrollo activo (`v0.3.4`). Este es un proyecto personal que se construye de forma pausada y metódica, priorizando la solidez de la ingeniería de software y el rigor analítico. Todo módulo se diseña bajo desarrollo guiado por pruebas (TDD), con suites de pruebas herméticas (sin llamadas a la red ni aleatoriedad no controlada), tipado estricto y contratos de datos inmutables antes de cada implementación.
+> **Estado del proyecto:** En desarrollo activo (`v0.3.7`). Este es un proyecto personal que se construye de forma pausada y metódica, priorizando la solidez de la ingeniería de software y el rigor analítico. Todo módulo se diseña bajo desarrollo guiado por pruebas (TDD), con suites de pruebas herméticas (sin llamadas a la red ni aleatoriedad no controlada), tipado estricto y contratos de datos inmutables antes de cada implementación.
 
 ## Visión General y Áreas de Enfoque
 

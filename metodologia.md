@@ -35,20 +35,25 @@ Para resolver esta ambigüedad sin depender de un único tag voluntario, Indie C
 ```
 
 ### 2.2 El Puntaje Indie (*Indie Score*)
-Cada videojuego es evaluado a través de una función de puntuación determinista $S \in [0.0, 1.0]$. La condición booleana de inclusión como independiente se define como:
+Cada videojuego es evaluado a través de una función de puntuación determinista $S \in [0.0, 1.0]$ estructurada en cinco dimensiones ponderadas (`config/taxonomy.yaml`):
+1. **Presencia de etiqueta indie:** peso `0.25`.
+2. **Autopublicación o publicador boutique (catálogo $\le 5$ títulos):** peso `0.25`.
+3. **Precio base accesible ($\le \$35.00$ USD):** peso `0.15` (proxy de presupuesto modesto).
+4. **Diversificación lingüística moderada ($\le 8$ idiomas):** peso `0.10` (proxy de esfuerzo de localización independiente).
+5. **Ausencia de conglomerado multinacional / Major Publisher:** peso `0.25`.
+
+La condición booleana de inclusión como independiente se define formalmente como:
 
 $$\text{is\_indie} = 
 \begin{cases} 
-\text{True} & \text{si } S \ge 0.50 \text{ y no pertenece a la lista negra corporativa} \\
+\text{True} & \text{si } S \ge 0.60 \text{ y el publicador no figura en la lista corporativa excluida} \\
 \text{False} & \text{en cualquier otro caso}
 \end{cases}$$
 
-### 2.3 Resolución de Endogeneidad en el Precio
-Durante el diseño metodológico y tras consultas activas con la comunidad de desarrolladores y líderes de estudio, se resolvió explícitamente evitar el **sesgo de circularidad (endogeneidad)**:
-
-> **Decisión Metodológica Inviolable:**  
-> **El precio de venta nunca interviene como variable de entrada para decidir si un juego es indie o no.**  
-> Si se utilizara el precio dentro del puntaje de demarcación, los juegos económicos resultarían sobreseleccionados de forma artificial antes de comenzar el estudio. En Indie Census, el precio (`price_cents`) se mantiene estrictamente como una variable dependiente observada, permitiendo estudios rigurosos de elasticidad y pricing sin sesgos de muestreo.
+### 2.3 Ponderación del Precio como Proxy Financiero
+De acuerdo con el registro arquitectónico ADR-0004, el precio interviene exclusivamente con un peso moderado del 15% como proxy de escala económica:
+- Videojuegos con precio base $\le \$35.00$ USD suman el crédito de accesibilidad económica.
+- Títulos con precios propios de gran presupuesto ($\ge \$50.00 - \$70.00$ USD) no reciben dicho puntaje, penalizando la probabilidad de que megaproyectos corporativos sean catalogados como independientes.
 
 ---
 
@@ -75,9 +80,10 @@ El número de copias vendidas $N_{\text{copias}}$ se modela a partir del volumen
 $$N_{\text{copias}} = R \times M(R, \text{año})$$
 
 Donde el multiplicador dinámico $M$ se calibra de acuerdo con la antigüedad del título y el rango de volumen:
-- Títulos lanzados en 2024: $M \approx 30$ (reflejando la ratio contemporánea de reseñas por compra en Steam).
-- Títulos con reseñas $< 50$: $M \approx 45$ (menor propensión inicial de los jugadores casuales a reseñar).
-- Calibración conservadora general: Banda estadística acotada entre 25 y 60 copias por reseña.
+- **Cohorte Clásica ($< 2020$):** $M = 45$ (menor propensión histórica de los jugadores a reseñar compras).
+- **Cohorte de Transición ($2020 - 2023$):** $M = 35$ (expansión del ecosistema digital y adopción del hábito de reseña).
+- **Cohorte Moderna ($2024+$):** $M = 30$ (ratio contemporánea de alta actividad de reseñas en Steam).
+- **Banda de incertidumbre estadística:** Se computan estimaciones inferior ($M_{\min} = 20$), mediana calibrada ($M_{\text{mid}}$) y superior ($M_{\max} = 55$).
 
 ### 3.2 Ingresos Brutos (*Gross Revenue*)
 Representa el volumen total facturado al precio base de catálogo $P_{\text{USD}}$:
@@ -199,18 +205,17 @@ El dataset abierto puede consultarse en memoria en milisegundos sin necesidad de
 ```python
 import duckdb
 
-#conectar en memoria y consultar directamente el archivo parquet
+# Conectar en memoria y consultar la dimensión de juegos limpios
 con = duckdb.connect()
 df_resumen = con.execute("""
     SELECT 
-        genero_principal,
-        COUNT(*) AS total_juegos,
-        ROUND(AVG(precio_usd), 2) AS precio_promedio,
-        ROUND(SUM(ingresos_estimados_usd) / 1e6, 2) AS millones_ingreso_bruto
-    FROM 'data/publico/v0.4.0/parquet/plata_steam_metricas_limpias.parquet'
-    GROUP BY genero_principal
+        engine,
+        is_indie,
+        COUNT(*) AS total_juegos
+    FROM 'data/plata/steam/dim_game.parquet'
+    GROUP BY engine, is_indie
     ORDER BY total_juegos DESC
-    LIMIT 5;
+    LIMIT 10;
 """).df()
 
 print(df_resumen)
@@ -220,16 +225,16 @@ print(df_resumen)
 ```python
 import polars as pl
 
-#leer serie temporal de saturacion mensual
+# Leer serie temporal de saturación mensual en Capa Oro
 df_saturacion = pl.read_parquet(
-    "data/publico/v0.4.0/parquet/gold_market_saturation_monthly.parquet"
+    "data/oro/gold_market_saturation_monthly.parquet"
 )
 
-#filtrar meses con mayor volumen de indies lanzados
+# Filtrar meses con mayor volumen de indies lanzados
 top_meses = (
     df_saturacion
-    .filter(pl.col("total_lanzamientos_indie") > 1500)
-    .sort("total_lanzamientos_indie", descending=True)
+    .filter(pl.col("indie_releases_count") > 100)
+    .sort("indie_releases_count", descending=True)
 )
 print(top_meses.head(5))
 ```

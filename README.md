@@ -3,7 +3,7 @@
 [Read in English](README.md) · [Leer en español](README.es.md)
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-383%20passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-423%20passed-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen.svg)
 ![Architecture](https://img.shields.io/badge/architecture-Data%20Lakehouse-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -11,7 +11,7 @@
 
 Open data observatory of the independent game development ecosystem.
 
-> **Project Status:** Under active development (`v0.3.4`). This is a personal project being built steadily and methodically, prioritizing software engineering robustness and analytical rigor over speed. Every module is built following Test-Driven Development (TDD), with hermetic test suites (no external network calls or uncontrolled randomness), strict typing, and immutable data contracts defined before implementation.
+> **Project Status:** Under active development (`v0.3.7`). This is a personal project being built steadily and methodically, prioritizing software engineering robustness and analytical rigor over speed. Every module is built following Test-Driven Development (TDD), with hermetic test suites (no external network calls or uncontrolled randomness), strict typing, and immutable data contracts defined before implementation.
 
 ## Overview and Focus Areas
 

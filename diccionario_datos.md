@@ -28,21 +28,21 @@ Contiene la dimensión limpia de videojuegos catalogados en Steam tras el proces
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `game_id` | `int64` / `INTEGER` | Identificador entero | No | Identificador único de aplicación en Steam (`appid`). | Valve Web API |
 | `title` | `string` / `TEXT` | Texto UTF-8 | No | Título comercial oficial del videojuego en la tienda. | `appdetails` |
-| `release_date` | `date32` / `TEXT` | `YYYY-MM-DD` | Sí | Fecha oficial de publicación en el catálogo de Steam. | `appdetails` |
+| `release_date` | `string` / `TEXT` | `YYYY-MM-DD` | Sí | Fecha oficial de publicación en el catálogo de Steam. | `appdetails` |
 | `is_free` | `bool_` / `INTEGER` | Booleano (1/0) | No | Indica si el videojuego es de distribución gratuita (Free-to-Play). | `appdetails` |
 | `price_launch_usd_cents`| `int64` / `INTEGER` | Centavos de USD | No | Precio base de catálogo en centavos (ej. 1999 = \$19.99 USD). | `appdetails` |
 | `genres` | `list<string>` / `TEXT` | Lista / JSON array | No | Categorías taxonómicas oficiales asignadas en la ficha de tienda. | `appdetails` |
-| `language_count` | `int64` / `INTEGER` | Conteo entero | No | Cantidad de idiomas soportados declarados por el desarrollador. | `appdetails` |
+| `language_count` | `int32` / `INTEGER` | Conteo entero | No | Cantidad de idiomas soportados declarados por el desarrollador. | `appdetails` |
 | `developers` | `list<string>` / `TEXT` | Lista / JSON array | No | Nombres de los estudios o individuos acreditados como desarrolladores. | `appdetails` |
 | `publishers` | `list<string>` / `TEXT` | Lista / JSON array | No | Nombres de las entidades que publican y comercializan el juego. | `appdetails` |
 | `group` | `string` / `TEXT` | Categoría | No | Clasificación editorial (`indie`, `aa_midmarket`, `aaa_major`). | Clasificador Semántico |
 | `engine` | `string` / `TEXT` | Categoría | Sí | Motor tecnológico detectado (`Godot`, `Unity`, `Unreal`, `Custom/Other`). | Clasificador Nivel 1/2 |
-| `engine_evidence_level` | `int8` / `INTEGER` | Nivel (1 a 4 o nulo) | Sí | Nivel de certeza de la evidencia técnica (1=Texto/Créditos, 2=Tags, 3=Canal oficial, 4=Regex descripción). | Clasificador Motor |
+| `engine_evidence_level` | `int8` / `INTEGER` | Nivel (1 a 4 o nulo) | Sí | Nivel de certeza de la evidencia técnica (1=Texto/Créditos, 2=Tags, 3=Firma técnica comprobada, 4=Regex descripción). | Clasificador Motor |
 | `indie_score` | `float64` / `REAL` | Escala 0.00 a 1.00 | No | Puntuación continua de independencia según evidencia semántica. | Algoritmo Indie Score |
 | `is_indie` | `bool_` / `INTEGER` | Booleano (1/0) | No | Booleano final de demarcación: `True` si `indie_score >= 0.60` y sin major publisher excluido. | Algoritmo Indie Score |
 | `ai_disclosure_level` | `string` / `TEXT` | Categoría | No | Nivel ético y formal de declaración de IA generativa (`declared`, `tagged`, `self_reported`, `unknown`). | Clasificador Semántico (`src/classify/ai.py`) |
 | `source` | `string` / `TEXT` | Categoría | No | Origen de la ingesta (ej. `steam_store`). | Extractor Bronce |
-| `extracted_at` | `timestamp` / `TEXT` | ISO-8601 UTC | No | Marca temporal en la que se extrajo el payload crudo original. | Envoltorio Bronce |
+| `extracted_at` | `string` / `TEXT` | ISO-8601 UTC | No | Marca temporal en la que se extrajo el payload crudo original. | Envoltorio Bronce |
 | `pipeline_version` | `string` / `TEXT` | SemVer (`vX.Y.Z`) | No | Versión del pipeline de datos con la que se procesó la fila. | Pipeline Engine |
 
 ---
@@ -60,7 +60,7 @@ Contiene la recepción cuantitativa de la comunidad de usuarios por videojuego.
 | `total_positive` | `int64` / `INTEGER` | Conteo entero | No | Cantidad acumulada de votos y reseñas positivas emitidas. | Steam Reviews API |
 | `total_negative` | `int64` / `INTEGER` | Conteo entero | No | Cantidad acumulada de votos y reseñas negativas emitidas. | Steam Reviews API |
 | `total_reviews` | `int64` / `INTEGER` | Conteo entero | No | Volumen total de reseñas registradas ($\text{pos} + \text{neg}$). | Steam Reviews API |
-| `extracted_at` | `timestamp` / `TEXT` | ISO-8601 UTC | No | Marca temporal UTC de la captura de reseñas. | Envoltorio Bronce |
+| `extracted_at` | `string` / `TEXT` | ISO-8601 UTC | No | Marca temporal UTC de la captura de reseñas. | Envoltorio Bronce |
 | `pipeline_version` | `string` / `TEXT` | SemVer (`vX.Y.Z`) | No | Versión del pipeline utilizada para normalizar las métricas. | Pipeline Engine |
 
 ---
@@ -75,7 +75,7 @@ Tabla analítica central de hechos que consolida métricas económicas y proyecc
 | Columna | Tipo Arrow / SQL | Unidad / Formato | Nulos | Definición Conceptual |
 | :--- | :--- | :--- | :--- | :--- |
 | `game_id` | `int64` / `INTEGER` | Identificador entero | No | Identificador foráneo a `dim_game`. |
-| `release_date_key` | `string` / `TEXT` | Clave `YYYYMMDD` | Sí | Clave de unión hacia la dimensión de fechas (`dim_date`). |
+| `release_date_key` | `int32` / `INTEGER` | Clave `YYYYMMDD` | Sí | Clave subrogada entera de unión hacia la dimensión de fechas (`dim_date`). |
 | `price_usd` | `float64` / `REAL` | Dólares USD | No | Precio base en formato decimal normalizado. |
 | `is_free` | `bool_` / `INTEGER` | Booleano (1/0) | No | Indicador de juego sin costo de compra directo. |
 | `total_positive` | `int64` / `INTEGER` | Conteo entero | No | Reseñas positivas consolidadas. |
@@ -87,9 +87,45 @@ Tabla analítica central de hechos que consolida métricas económicas y proyecc
 | `est_copies_max` | `int64` / `INTEGER` | Unidades | No | Estimación superior de copias vendidas. |
 | `est_gross_revenue_usd`| `float64` / `REAL` | Dólares USD | No | Proyección de facturación bruta ($\text{est\_copies\_mid} \times \text{price\_usd}$). |
 | `est_net_revenue_usd` | `float64` / `REAL` | Dólares USD | No | Rendimiento neto desarrollador tras comisión 30%, impuestos y devoluciones. |
-| `language_count` | `int64` / `INTEGER` | Conteo entero | No | Diversificación lingüística del título. |
+| `language_count` | `int32` / `INTEGER` | Conteo entero | No | Diversificación lingüística del título. |
 
 ---
+
+
+---
+
+## 3.1. Tabla: `dim_date` (Capa Oro - Data Mart Relacional)
+
+Dimensión temporal calendario para análisis multidimensional en el Data Mart analítico SQLite.
+
+- **Clave Primaria:** `date_key`
+- **Granularidad:** 1 fila por día calendario.
+
+| Columna | Tipo SQL | Formato | Nulos | Definición Conceptual |
+| :--- | :--- | :--- | :--- | :--- |
+| `date_key` | `INTEGER` | `YYYYMMDD` | No | Clave primaria entera subrogada. |
+| `full_date` | `TEXT` | `YYYY-MM-DD` | No | Fecha completa en formato ISO-8601. |
+| `year` | `INTEGER` | Año (ej. 2024) | No | Año calendario. |
+| `quarter` | `INTEGER` | 1 a 4 | No | Trimestre calendario. |
+| `month` | `INTEGER` | 1 a 12 | No | Número de mes. |
+| `month_name`| `TEXT` | Nombre del mes | No | Nombre del mes en inglés (ej. January). |
+| `day` | `INTEGER` | 1 a 31 | No | Día del mes. |
+| `day_of_week`| `TEXT` | Día de la semana | No | Nombre del día (ej. Monday). |
+| `is_weekend` | `INTEGER` | 1 o 0 | No | Indicador booleano de fin de semana. |
+
+---
+
+## 3.2. Tabla: `dim_genre_bridge` (Capa Oro - Tabla Puente)
+
+Tabla puente relacional para resolver la relación muchos a muchos entre videojuegos y géneros taxonómicos.
+
+- **Clave Primaria Compuesta:** (`game_id`, `genre`)
+- **Granularidad:** 1 fila por cada par videojuego-género.
+
+| Columna | Tipo SQL | Formato | Nulos | Definición Conceptual |
+| :--- | :--- | :--- | :--- | :--- |
+| `game_id` | `INTEGER` | Entero | No | Clave foránea referenciando a `dim_game(game_id)`. |
+| `genre` | `TEXT` | Texto | No | Nombre normalizado del género taxonómico. |
 
 ## 4. Tabla: `gold_engine_adoption_monthly` (Capa Oro)
 
