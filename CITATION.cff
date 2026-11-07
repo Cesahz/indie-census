@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this dataset or software, please cite it as below."
+title: "Indie Census: Open Data Observatory of the Independent Game Development Ecosystem"
+authors:
+  - name: "Christian Espinola"
+    alias: "Cesahz"
+version: 0.3.7
+date-released: 2026-10-30
+license: MIT
+url: "https://github.com/Cesahz/indie-census"
+abstract: >-
+  Open data observatory and reproducible Data Lakehouse pipeline tracking commercial viability,
+  game engine adoption, pricing distributions, and generative AI disclosures across the independent
+  video game ecosystem on Steam.
+keywords:
+  - "data engineering"
+  - "game industry"
+  - "indie games"
+  - "data lakehouse"
+  - "steam"
+  - "open data"
+  - "market research"
