@@ -52,6 +52,19 @@ Durante el diseño metodológico y tras consultas activas con la comunidad de de
 
 ---
 
+### 2.4 Monitoreo Ético de Inteligencia Artificial Generativa (Ventana 2020–2026)
+Uno de los propósitos fundacionales de Indie Census es estudiar el impacto de la Inteligencia Artificial generativa en el ecosistema de videojuegos independientes, evitando acusaciones infundadas o estigmatización contra creadores:
+
+- **El Experimento Natural (2020–2023 frente a 2024–2026):** En enero de 2024, Valve introdujo su política obligatoria de divulgación de IA (*AI Generated Content Disclosure*). Para cuantificar el verdadero crecimiento de la IA, el observatorio requiere la ventana histórica **2020–2023** como línea base previa a la política, permitiendo medir de forma rigurosa la aceleración en la publicación de títulos asistidos o generados por IA a partir de 2024.
+- **Principio de Contención Ética (Cero Falsos Positivos):** En foros y comunidades de desarrolladores existe un desgaste evidente por acusaciones injustificadas hacia artistas y programadores que crean sus obras artesanalmente. Por ello, el clasificador proscribe categóricamente cualquier inferencia visual, estilística o probabilística no comprobable.
+- **Jerarquía Estricta de Cuatro Niveles (`ai_disclosure_level`):**
+  1. `declared`: Declaración formal del desarrollador en los descriptores de contenido oficiales de Steam (ej. encuestas de Steamworks).
+  2. `tagged`: Presencia de etiquetas comunitarias de tienda (`ai`, `generative ai`, `artificial intelligence`).
+  3. `self_reported`: Declaración textual explícita en notas de parche, descripción o créditos por parte del autor.
+  4. `unknown`: Ausencia comprobable de declaraciones. Nunca se presupone uso sin evidencia primaria.
+
+---
+
 ## 3. Modelo Econométrico de Ingresos (Boxleiter Adaptado)
 
 Steam no publica cifras oficiales de ventas ni ingresos. Para estimar la facturación de cada título, Indie Census implementa una versión calibrada del **método Boxleiter**, ampliamente reconocido en la analítica de la industria del videojuego.

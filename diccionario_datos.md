@@ -37,10 +37,10 @@ Contiene la dimensión limpia de videojuegos catalogados en Steam tras el proces
 | `publishers` | `list<string>` / `TEXT` | Lista / JSON array | No | Nombres de las entidades que publican y comercializan el juego. | `appdetails` |
 | `group` | `string` / `TEXT` | Categoría | No | Clasificación editorial (`indie`, `aa_midmarket`, `aaa_major`). | Clasificador Semántico |
 | `engine` | `string` / `TEXT` | Categoría | Sí | Motor tecnológico detectado (`Godot`, `Unity`, `Unreal`, `Custom/Other`). | Clasificador Nivel 1/2 |
-| `engine_evidence_level` | `int64` / `INTEGER` | Nivel (1 a 3) | No | Nivel de certeza de la evidencia técnica (1=Texto, 2=Tags, 3=Binario). | Clasificador Nivel 1/2 |
+| `engine_evidence_level` | `int8` / `INTEGER` | Nivel (1 a 4 o nulo) | Sí | Nivel de certeza de la evidencia técnica (1=Texto/Créditos, 2=Tags, 3=Canal oficial, 4=Regex descripción). | Clasificador Motor |
 | `indie_score` | `float64` / `REAL` | Escala 0.00 a 1.00 | No | Puntuación continua de independencia según evidencia semántica. | Algoritmo Indie Score |
-| `is_indie` | `bool_` / `INTEGER` | Booleano (1/0) | No | Booleano final de demarcación: `True` si `indie_score >= 0.50`. | Algoritmo Indie Score |
-| `ai_disclosure_level` | `int64` / `INTEGER` | Nivel (0 a 2) | No | Declaración de uso de Inteligencia Artificial generativa en créditos. | `appdetails` |
+| `is_indie` | `bool_` / `INTEGER` | Booleano (1/0) | No | Booleano final de demarcación: `True` si `indie_score >= 0.60` y sin major publisher excluido. | Algoritmo Indie Score |
+| `ai_disclosure_level` | `string` / `TEXT` | Categoría | No | Nivel ético y formal de declaración de IA generativa (`declared`, `tagged`, `self_reported`, `unknown`). | Clasificador Semántico (`src/classify/ai.py`) |
 | `source` | `string` / `TEXT` | Categoría | No | Origen de la ingesta (ej. `steam_store`). | Extractor Bronce |
 | `extracted_at` | `timestamp` / `TEXT` | ISO-8601 UTC | No | Marca temporal en la que se extrajo el payload crudo original. | Envoltorio Bronce |
 | `pipeline_version` | `string` / `TEXT` | SemVer (`vX.Y.Z`) | No | Versión del pipeline de datos con la que se procesó la fila. | Pipeline Engine |
